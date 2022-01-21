@@ -29,7 +29,14 @@
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
-typedef enum GameScreen { LOGO = 0, TITLE, OPTIONS, GAMEPLAY, ENDING } GameScreen;
+typedef enum GameScreen {
+    GAMESCREEN_LOGO = 0,
+    GAMESCREEN_LEVEL,
+    GAMESCREEN_TITLE,
+    GAMESCREEN_OPTIONS,
+    GAMESCREEN_GAMEPLAY,
+    GAMESCREEN_ENDING,
+} GameScreen;
 
 //----------------------------------------------------------------------------------
 // Global Variables Declaration (shared by several modules)
