@@ -9,6 +9,11 @@ typedef struct {
     char cells[MAX_LEVEL_CELLS_Y+2][MAX_LEVEL_CELLS_X+3];
 } Level;
 
+static inline int LevelCellIsSolid(char cell)
+{
+    return cell == '#' || cell == '~';
+}
+
 
 Level *LevelLoadFromFile(const char *fname);
 

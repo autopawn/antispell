@@ -13,7 +13,16 @@ static void DrawLevel(Level *level, int hlev)
             char cell = level->cells[y][x];
             Rectangle rect = {x*TS, y*TS, TS, TS};
 
-            if (cell == ' ' && hlev == 0) DrawRectangleRec(rect, PINK);
+            if (hlev == 0 && !LevelCellIsSolid(cell))
+            {
+                DrawRectangleRec(rect, PINK);
+                if (cell != ' '){
+                    char symbol[2];
+                    symbol[0] = cell;
+                    symbol[1] = '\0';
+                    DrawText(symbol, rect.x, rect.y, TS, GRAY);
+                }
+            }
             if (cell == '#' && hlev == 2) DrawRectangleRec(rect, GRAY);
         }
     }
