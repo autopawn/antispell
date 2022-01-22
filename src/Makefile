@@ -381,7 +381,8 @@ PROJECT_SOURCE_FILES ?= \
     screen_ending.c \
     level.c \
     state.c \
-    draw.c
+    draw.c \
+    physics.c
 
 # Define all object files from source files
 OBJS = $(patsubst %.c, %.o, $(PROJECT_SOURCE_FILES))

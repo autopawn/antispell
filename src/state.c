@@ -1,5 +1,6 @@
 #include "state.h"
 
+#include <raylib.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -68,11 +69,6 @@ void StateFree(State *state)
     free(state);
 }
 
-void StateUpdate(const State *state)
-{
-
-}
-
 const Entity *StateGetPlayer(const State *state){
     const Entity *ent = NULL;
     for (int i = 0; i < state->entsN; i++)
@@ -81,4 +77,21 @@ const Entity *StateGetPlayer(const State *state){
             ent = &state->ents[i];
     }
     return ent;
+}
+
+void StateUpdate(const State *state)
+{
+    for (int i = 0; i < state->entsN; i++)
+    {
+        Entity *ent = &state->ents[i];
+        int colliding = UpdateBody(state->level, &ent->body);
+
+        if (ent->type == TYPE_PLAYER)
+        {
+            if (IsKeyPressed(KEY_LEFT))  ent->body.vx = -4;
+            if (IsKeyPressed(KEY_RIGHT)) ent->body.vx = +4;
+            if (IsKeyPressed(KEY_UP))    ent->body.vy = -4;
+            if (IsKeyPressed(KEY_DOWN))  ent->body.vy = +4;
+        }
+    }
 }

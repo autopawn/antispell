@@ -2,13 +2,7 @@
 #define STATE_H
 
 #include "level.h"
-
-#define LEVEL_TILE_SIZE 50
-
-typedef struct {
-    float x, y, vx, vy;
-    float rad;
-} Body;
+#include "physics.h"
 
 typedef enum {
     TYPE_PLAYER = '@',
