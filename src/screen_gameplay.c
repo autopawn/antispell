@@ -109,21 +109,26 @@ void DrawGameplayScreen(void)
 
     cam.zoom = 1.0 / HLEV_ZOOM_MULT;
     BeginMode2D(cam);
-        DrawState(state, 0);
+        DrawState(state, LAYER0_RUG);
     EndMode2D();
 
     DrawTextureTiled(floorTexture,
         (Rectangle){cam.target.x*cam.zoom, cam.target.y*cam.zoom, floorTexture.width, floorTexture.height},
         (Rectangle){0, 0, screenW, screenH}, (Vector2){0,0}, 0, 1, WHITE);
 
+    cam.zoom = 1.0 / HLEV_ZOOM_MULT;
+    BeginMode2D(cam);
+        DrawState(state, LAYER1_FLOOR);
+    EndMode2D();
+
     cam.zoom = 1.0;
     BeginMode2D(cam);
-        DrawState(state, 1);
+        DrawState(state, LAYER2_ENTS);
     EndMode2D();
 
     cam.zoom = HLEV_ZOOM_MULT;
     BeginMode2D(cam);
-        DrawState(state, 2);
+        DrawState(state, LAYER3_WALLS);
     EndMode2D();
 
     DrawGUI(state);
