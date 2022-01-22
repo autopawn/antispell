@@ -29,7 +29,7 @@
 #include <string.h>
 
 #include "screens.h"
-#include "level.h"
+#include "state.h"
 
 
 //----------------------------------------------------------------------------------
@@ -37,7 +37,7 @@
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0;
-static Level *level;
+static State *state;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -46,8 +46,8 @@ static Level *level;
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
 {
-    level = LevelLoadFromFile("resources/levels/00.txt");
-    LevelPrint(level);
+    state = StateLoadFromFile("resources/levels/00.txt");
+    LevelPrint(state->level);
 
     framesCounter = 0;
     finishScreen = 0;
@@ -71,14 +71,6 @@ void DrawGameplayScreen(void)
 {
     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), PURPLE);
 
-    char buffer[100];
-    sprintf(buffer, "Level %p (%d x %d)", level, level->sizeY, level->sizeX);
-    DrawText(buffer, 130, 300, 20, MAROON);
-    for (int y = 0; y < level->sizeY; y++)
-    {
-        DrawText(level->cells[y], 130, 300 + 24 * (y + 1), 20, MAROON);
-    }
-
     DrawTextEx(font, "GAMEPLAY SCREEN", (Vector2){ 20, 10 }, font.baseSize*3, 4, MAROON);
     DrawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
 }
@@ -86,7 +78,7 @@ void DrawGameplayScreen(void)
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
-    LevelFree(level);
+    StateFree(state);
 }
 
 // Gameplay Screen should finish?

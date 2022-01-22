@@ -68,6 +68,12 @@ Level *LevelLoadFromFile(const char *fname){
     return level;
 }
 
+Level *LevelCopy(Level *level){
+    Level *level2 = malloc(sizeof(Level));
+    memcpy(level2, level, sizeof(*level2));
+    return level2;
+}
+
 void LevelFree(Level *level){
     free(level);
 }

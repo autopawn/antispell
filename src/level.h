@@ -12,6 +12,8 @@ typedef struct {
 
 Level *LevelLoadFromFile(const char *fname);
 
+Level *LevelCopy(Level *level);
+
 void LevelFree(Level *level);
 
 void LevelPrint(const Level *level);
