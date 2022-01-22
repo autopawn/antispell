@@ -1,6 +1,7 @@
 #include "draw.h"
 
 #include <raylib.h>
+#include <string.h>
 
 static const int TS = LEVEL_TILE_SIZE;
 
@@ -36,7 +37,7 @@ static void DrawLevel(Level *level, DrawLayer layer)
 
                     default:
                     {
-                        DrawRectangleRec(rect, PINK);
+                        DrawRectangleRec(rect, BLUE);
                         if (cell != ' '){
                             char symbol[2];
                             symbol[0] = cell;
@@ -82,7 +83,18 @@ void DrawState(State *state, DrawLayer layer){
 
 void DrawGUI(State *state)
 {
-    float wand_x = (GetScreenWidth() - wandTexture[0].width)/2.0;
-    DrawTexture(wandTexture[0], wand_x, -25, WHITE);
-    DrawTexture(wandTexture[1], wand_x, -25, RED);
+    float wandX = (GetScreenWidth() - wandTexture[0].width)/2.0;
+    DrawTexture(wandTexture[0], wandX, -25, WHITE);
+    DrawTexture(wandTexture[1], wandX, -25, GRAY);
+
+    int spellLength = strlen(state->wand.spell);
+    for (int i = 0; i < MAX_SPELL_LENGHT; i++)
+    {
+        char symbol[2];
+        symbol[0] = (i < spellLength)? state->wand.spell[i] : '-';
+        symbol[1] = '\0';
+        float symbX = wandX + (i+1)*wandTexture[0].width/(MAX_SPELL_LENGHT + 2.5);
+        DrawText(symbol, symbX-2, 12, 32, BLACK);
+        DrawText(symbol, symbX, 10, 32, WHITE);
+    }
 }

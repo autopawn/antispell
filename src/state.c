@@ -59,6 +59,7 @@ State *StateLoadFromFile(const char *fname)
 {
     State *state = malloc(sizeof(State));
     assert(state != NULL);
+    memset(state, 0, sizeof(*state));
     state->level = LevelLoadFromFile(fname);
 
     state->entsCapacity = 4;

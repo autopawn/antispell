@@ -4,6 +4,8 @@
 #include "level.h"
 #include "physics.h"
 
+#define MAX_SPELL_LENGHT 5
+
 typedef enum {
     TYPE_PLAYER = '@',
 } EntityType;
@@ -19,6 +21,13 @@ typedef struct {
     int entsCapacity;
     int entsN;
     Entity *ents;
+
+    struct {
+        // Words forming in the wand
+        char spell[MAX_SPELL_LENGHT + 1];
+        char absorvingChar;
+        int absorvingTime;
+    } wand;
 } State;
 
 
