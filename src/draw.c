@@ -34,7 +34,7 @@ static void DrawLevel(Level *level, DrawLayer layer)
             {
                 switch (cell)
                 {
-                    case 'L': DrawRectangleRec(rect, RED); break;
+                    case 'l': DrawRectangleRec(rect, RED); break;
 
                     default:
                     {
@@ -64,7 +64,7 @@ void DrawState(State *state, DrawLayer layer){
     for (int i = 0; i < state->entsN; i++)
     {
         const Entity *ent = &state->ents[i];
-        if (layer == LAYER1_FLOOR)
+        if (layer == LAYER0_RUG)
         {
             DrawCircle(ent->body.x, ent->body.y, ent->body.rad, DARKGRAY);
         }
@@ -85,11 +85,22 @@ void DrawState(State *state, DrawLayer layer){
 void DrawGUI(State *state)
 {
     float wandX = (GetScreenWidth() - wandTexture[0].width)/2.0;
-    DrawTexture(wandTexture[0], wandX, -25, WHITE);
-    DrawTexture(wandTexture[1], wandX, -25, (state->wand.absorvingTime > 0)? SKYBLUE : GRAY);
 
-    int spellLength = strlen(state->wand.spell);
     char symbol[2];
+    int spellLength = strlen(state->wand.spell);
+
+    Color color = DARKGRAY;
+    if (state->wand.signal == WANDSIGNAL_BACKSPACE) color = RED;
+    if (state->wand.signal == WANDSIGNAL_ABSORB) color = SKYBLUE;
+    if (state->wand.signal == WANDSIGNAL_ABSORBED) color = YELLOW;
+    if (state->wand.signal == WANDSIGNAL_FULL) color = DARKBLUE;
+    float si = state->wand.signalIntensity;
+    color.r = (unsigned char)(color.r*si + DARKGRAY.r*(1.0 - si));
+    color.g = (unsigned char)(color.g*si + DARKGRAY.g*(1.0 - si));
+    color.b = (unsigned char)(color.b*si + DARKGRAY.b*(1.0 - si));
+
+    DrawTexture(wandTexture[0], wandX, -25, WHITE);
+    DrawTexture(wandTexture[1], wandX, -25, color);
 
     for (int i = 0; i < MAX_SPELL_LENGHT; i++)
     {
@@ -100,14 +111,14 @@ void DrawGUI(State *state)
         DrawText(symbol, symbX, 10, 32, WHITE);
     }
 
-    if (state->wand.absorvingTime > 0)
+    if (state->wand.absorbingTime > 0)
     {
-        symbol[0] = state->wand.absorvingChar;
+        symbol[0] = state->wand.absorbingChar;
         symbol[1] = '\0';
         float symbX = wandX + (MAX_SPELL_LENGHT + 1.3)*wandTexture[0].width/(MAX_SPELL_LENGHT + 2.5);
         float movX = rand()%7 - 3;
         float movY = rand()%7 - 3;
         DrawText(symbol, symbX - 2 + movX, 12 + movY, 32, BLACK);
-        DrawText(symbol, symbX + movX, 10 + movY, 32, SKYBLUE);
+        DrawText(symbol, symbX + movX, 10 + movY, 32, color);
     }
 }

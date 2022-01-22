@@ -62,12 +62,16 @@ void InitGameplayScreen(void)
     framesCounter = 0;
     finishScreen = 0;
     wandAbsorving = 0;
+
+    const Entity *player = StateGetPlayer(state);
+    if (player)
+        camCenter = (Vector2){player->body.x, player->body.y};
 }
 
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    if (state->wand.absorvingTime > 0)
+    if (state->wand.absorbingTime > 0)
     {
         StateUpdate(state);
         wandAbsorving = 1;
@@ -82,20 +86,13 @@ void UpdateGameplayScreen(void)
     const Entity *player = StateGetPlayer(state);
     if (player)
     {
-        if (framesCounter == 0)
-        {
-            camCenter = (Vector2){player->body.x, player->body.y};
-        }
-        else
-        {
-            camCenter.x = 0.8*camCenter.x + 0.2*player->body.x;
-            camCenter.y = 0.8*camCenter.y + 0.2*player->body.y;
-        }
+        camCenter.x = 0.8*camCenter.x + 0.2*player->lookX;
+        camCenter.y = 0.8*camCenter.y + 0.2*player->lookY;
     }
 
 
     // Press enter or tap to change to ENDING screen
-    if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
+    if (IsKeyPressed(KEY_ENTER))
     {
         finishScreen = 1;
         PlaySound(fxCoin);

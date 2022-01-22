@@ -8,7 +8,7 @@
 
 typedef enum {
     TYPE_PLAYER = '@',
-    TYPE_PLANT = 'i',
+    TYPE_PLANT = 'I',
 } EntityType;
 
 typedef struct {
@@ -16,7 +16,17 @@ typedef struct {
     EntityType type;
     // Char that can be absorved by the wand
     char powerChar;
+    // Position were it is looking
+    float lookX, lookY;
 } Entity;
+
+typedef enum
+{
+    WANDSIGNAL_ABSORB = 0,
+    WANDSIGNAL_ABSORBED = 1,
+    WANDSIGNAL_FULL = 2,
+    WANDSIGNAL_BACKSPACE = 3,
+} WandSignal;
 
 typedef struct {
     Level *level;
@@ -28,8 +38,10 @@ typedef struct {
     struct {
         // Words forming in the wand
         char spell[MAX_SPELL_LENGHT + 1];
-        char absorvingChar;
-        int absorvingTime;
+        char absorbingChar;
+        int absorbingTime;
+        WandSignal signal;
+        float signalIntensity;
     } wand;
 } State;
 

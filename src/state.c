@@ -62,7 +62,7 @@ State *StateLoadFromFile(const char *fname)
             char cell = state->level->cells[y][x];
             Body body = {(x + 0.5)*TS, (y + 0.5)*TS, 0, 0};
 
-            if (cell=='@' || cell=='i')
+            if (cell=='@' || ('A' <= cell && cell <= 'Z'))
                 StateAddEntity(state, cell, body);
         }
     }
@@ -108,15 +108,21 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding)
         case TYPE_PLAYER:
         {
             // Update player controls
-            if (IsKeyDown(KEY_RIGHT)) ent->body.vx += 0.1;
-            if (IsKeyDown(KEY_LEFT))  ent->body.vx -= 0.1;
-            if (IsKeyDown(KEY_UP))    ent->body.vy -= 0.1;
-            if (IsKeyDown(KEY_DOWN))  ent->body.vy += 0.1;
+            if (IsKeyDown(KEY_A)) ent->body.vx -= 0.1;
+            if (IsKeyDown(KEY_D)) ent->body.vx += 0.1;
+            if (IsKeyDown(KEY_W)) ent->body.vy -= 0.1;
+            if (IsKeyDown(KEY_S)) ent->body.vy += 0.1;
             BodyLimitSpeed(&ent->body, 2.0);
-            if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT))
+            if (!IsKeyDown(KEY_A) && !IsKeyDown(KEY_D))
                 ent->body.vx *= 0.6;
-            if (!IsKeyDown(KEY_UP) && !IsKeyDown(KEY_DOWN))
+            if (!IsKeyDown(KEY_W) && !IsKeyDown(KEY_S))
                 ent->body.vy *= 0.6;
+
+            // Look at the mouse
+            float lookDeltaX = GetMouseX() - GetScreenWidth()/2.0;
+            float lookDeltaY = GetMouseY() - GetScreenHeight()/2.0;
+            ent->lookX = ent->body.x + lookDeltaX/2.0;
+            ent->lookY = ent->body.y + lookDeltaY/2.0;
 
         } break;
 
@@ -130,50 +136,74 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding)
 
 void StateUpdate(State *state)
 {
+    { // Wand update
+        state->wand.signalIntensity *= 0.96;
+
+        int spellLen = strlen(state->wand.spell);
+        if (state->wand.absorbingTime >= WAND_ABSORV_TIME && spellLen < MAX_SPELL_LENGHT)
+        {
+            state->wand.spell[spellLen] = state->wand.absorbingChar;
+            state->wand.spell[spellLen + 1] = '\0';
+            state->wand.absorbingChar = 0;
+            state->wand.absorbingTime = 0;
+            state->wand.signal = WANDSIGNAL_ABSORBED;
+            state->wand.signalIntensity = 1.0;
+            spellLen++;
+        }
+
+        Entity *player = StateGetPlayer(state);
+        int absorving = 0;
+        if (player)
+        {
+            for (int i = 0; i < state->entsN; i++)
+            {
+                Entity *ent = &state->ents[i];
+                if (ent->powerChar == 0)
+                    continue;
+                if (state->wand.absorbingChar != 0 && state->wand.absorbingChar != ent->powerChar)
+                    continue;
+                if (BodyDistance(player->body, ent->body) <= WAND_RADIOUS)
+                {
+                    absorving = 1;
+                    state->wand.absorbingChar = ent->powerChar;
+                }
+            }
+        }
+        if (absorving)
+        {
+            state->wand.absorbingTime++;
+            if (spellLen == MAX_SPELL_LENGHT)
+            {
+                state->wand.absorbingTime = 1;
+                if (state->wand.signalIntensity < 0.5 || state->wand.signal == WANDSIGNAL_FULL)
+                {
+                    state->wand.signal = WANDSIGNAL_FULL;
+                    state->wand.signalIntensity = 1.0;
+                }
+            }
+            else
+            {
+                if (state->wand.signalIntensity < 0.5 || state->wand.signal == WANDSIGNAL_ABSORB)
+                {
+                    state->wand.signal = WANDSIGNAL_ABSORB;
+                    state->wand.signalIntensity = 1.0;
+                }
+            }
+
+        }
+        else
+        {
+            state->wand.absorbingChar = 0;
+            state->wand.absorbingTime = 0;
+        }
+
+    }
+
+    // Entities update
     for (int i = 0; i < state->entsN; i++)
     {
         Entity *ent = &state->ents[i];
         int colliding = UpdateBody(state->level, &ent->body);
         StateUpdateEntity(state, ent, colliding);
-    }
-
-    { // Wand update
-        int spellLen = strlen(state->wand.spell);
-        if (spellLen < MAX_SPELL_LENGHT)
-        {
-            Entity *player = StateGetPlayer(state);
-            int absorving = 0;
-            if (player)
-            {
-                for (int i = 0; i < state->entsN; i++)
-                {
-                    Entity *ent = &state->ents[i];
-                    if (ent->powerChar == 0)
-                        continue;
-                    if (state->wand.absorvingChar != 0 && state->wand.absorvingChar != ent->powerChar)
-                        continue;
-                    if (BodyDistance(player->body, ent->body) <= WAND_RADIOUS)
-                    {
-                        absorving = 1;
-                        state->wand.absorvingChar = ent->powerChar;
-                    }
-                }
-            }
-            if (absorving)
-                state->wand.absorvingTime++;
-            if (!absorving)
-            {
-                state->wand.absorvingChar = 0;
-                state->wand.absorvingTime = 0;
-            }
-
-            if (state->wand.absorvingTime >= WAND_ABSORV_TIME)
-            {
-                state->wand.spell[spellLen] = state->wand.absorvingChar;
-                state->wand.spell[spellLen+1] = '\0';
-                state->wand.absorvingChar = 0;
-                state->wand.absorvingTime = 0;
-            }
-        }
     }
 }
