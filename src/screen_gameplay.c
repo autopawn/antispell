@@ -40,6 +40,8 @@ const float HLEV_ZOOM_MULT = 1.04;
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0;
+
+Vector2 camCenter;
 static State *state;
 
 //----------------------------------------------------------------------------------
@@ -59,7 +61,23 @@ void InitGameplayScreen(void)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    framesCounter++;
+    // Update camera
+    for (int i = 0; i < state->entsN; i++)
+    {
+        Entity *ent = &state->ents[i];
+        if (ent->type == TYPE_PLAYER){
+            if (framesCounter == 0)
+            {
+                camCenter = (Vector2){ent->body.x, ent->body.y};
+            }
+            else
+            {
+                camCenter.x = 0.8*camCenter.x + 0.2*ent->body.x;
+                camCenter.y = 0.8*camCenter.y + 0.2*ent->body.y;
+            }
+        }
+    }
+
 
     // Press enter or tap to change to ENDING screen
     if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
@@ -67,6 +85,8 @@ void UpdateGameplayScreen(void)
         finishScreen = 1;
         PlaySound(fxCoin);
     }
+
+    framesCounter++;
 }
 
 // Gameplay Screen Draw logic
@@ -78,7 +98,7 @@ void DrawGameplayScreen(void)
     DrawRectangle(0, 0, screenW, screenH, BLACK);
 
     Camera2D cam;
-    cam.target = (Vector2){100 + framesCounter * 0.5, 100 + framesCounter * 0.2};
+    cam.target = camCenter;
     cam.offset = (Vector2){screenW/2, screenH/2};
     cam.rotation = 0;
 
