@@ -26,13 +26,17 @@ typedef struct {
     Entity *ents;
 } State;
 
+
 State *StateLoadFromFile(const char *fname);
 
 State *StateCopy(const State *state);
 
+void StateFree(State *state);
+
 void StateUpdate(const State *state);
 
-void StateFree(State *state);
+const Entity *StateGetPlayer(const State *state);
+
 
 
 #endif

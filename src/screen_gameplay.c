@@ -62,19 +62,17 @@ void InitGameplayScreen(void)
 void UpdateGameplayScreen(void)
 {
     // Update camera
-    for (int i = 0; i < state->entsN; i++)
+    const Entity *player = StateGetPlayer(state);
+    if (player)
     {
-        Entity *ent = &state->ents[i];
-        if (ent->type == TYPE_PLAYER){
-            if (framesCounter == 0)
-            {
-                camCenter = (Vector2){ent->body.x, ent->body.y};
-            }
-            else
-            {
-                camCenter.x = 0.8*camCenter.x + 0.2*ent->body.x;
-                camCenter.y = 0.8*camCenter.y + 0.2*ent->body.y;
-            }
+        if (framesCounter == 0)
+        {
+            camCenter = (Vector2){player->body.x, player->body.y};
+        }
+        else
+        {
+            camCenter.x = 0.8*camCenter.x + 0.2*player->body.x;
+            camCenter.y = 0.8*camCenter.y + 0.2*player->body.y;
         }
     }
 

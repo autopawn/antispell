@@ -61,14 +61,24 @@ State *StateCopy(const State *state1)
     return state2;
 }
 
-void StateUpdate(const State *state)
-{
-
-}
-
 void StateFree(State *state)
 {
     free(state->ents);
     LevelFree(state->level);
     free(state);
+}
+
+void StateUpdate(const State *state)
+{
+
+}
+
+const Entity *StateGetPlayer(const State *state){
+    const Entity *ent = NULL;
+    for (int i = 0; i < state->entsN; i++)
+    {
+        if (state->ents[i].type == TYPE_PLAYER)
+            ent = &state->ents[i];
+    }
+    return ent;
 }
