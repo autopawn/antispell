@@ -54,6 +54,8 @@ void InitGameplayScreen(void)
     state = StateLoadFromFile("resources/levels/00.txt");
     LevelPrint(state->level);
 
+    DrawLoadResources();
+
     framesCounter = 0;
     finishScreen = 0;
 }
@@ -117,13 +119,13 @@ void DrawGameplayScreen(void)
         DrawState(state, 2);
     EndMode2D();
 
-    DrawTextEx(font, "GAMEPLAY SCREEN", (Vector2){ 20, 10 }, font.baseSize*3, 4, MAROON);
-    DrawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
+    DrawGUI(state);
 }
 
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
+    DrawUnloadResources();
     StateFree(state);
 }
 

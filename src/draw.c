@@ -4,6 +4,19 @@
 
 static const int TS = LEVEL_TILE_SIZE;
 
+static Texture2D wandTexture;
+
+void DrawLoadResources()
+{
+    wandTexture = LoadTexture("resources/gui/wand.png");
+}
+
+void DrawUnloadResources()
+{
+    UnloadTexture(wandTexture);
+}
+
+
 static void DrawLevel(Level *level, int hlev)
 {
     for (int y = 0; y < level->sizeY; y++)
@@ -53,4 +66,10 @@ void DrawState(State *state, int hlev){
 
     }
 
+}
+
+void DrawGUI(State *state)
+{
+    float wand_x = (GetScreenWidth() - wandTexture.width)/2.0;
+    DrawTexture(wandTexture, wand_x, 0, RED);
 }

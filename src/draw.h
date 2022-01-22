@@ -3,7 +3,11 @@
 
 #include "state.h"
 
+void DrawLoadResources();
+void DrawUnloadResources();
+
 void DrawState(State *state, int hlev);
+void DrawGUI(State *state);
 
 
 #endif
