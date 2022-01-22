@@ -5,6 +5,9 @@
 #include <string.h>
 #include <assert.h>
 
+static const float WAND_RADIOUS = 30;
+static const int WAND_ABSORV_TIME = 30;
+
 static const int TS = LEVEL_TILE_SIZE;
 
 static void StateAddEntity(State *state, EntityType type, Body body)
@@ -26,34 +29,18 @@ static void StateAddEntity(State *state, EntityType type, Body body)
 
     switch (ent->type)
     {
-        case TYPE_PLAYER:
+        case TYPE_PLANT:
+        {
+            ent->powerChar = 'I';
+            break;
+        }
+
+        default:
         {
             break;
         }
     }
 }
-
-static void StateUpdateEntity(State *state, Entity *ent, int colliding)
-{
-    switch (ent->type)
-    {
-        case TYPE_PLAYER:
-        {
-            // Update player controls
-            if (IsKeyDown(KEY_RIGHT)) ent->body.vx += 0.1;
-            if (IsKeyDown(KEY_LEFT))  ent->body.vx -= 0.1;
-            if (IsKeyDown(KEY_UP))    ent->body.vy -= 0.1;
-            if (IsKeyDown(KEY_DOWN))  ent->body.vy += 0.1;
-            BodyLimitSpeed(&ent->body, 2.0);
-            if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT))
-                ent->body.vx *= 0.6;
-            if (!IsKeyDown(KEY_UP) && !IsKeyDown(KEY_DOWN))
-                ent->body.vy *= 0.6;
-
-        } break;
-    }
-}
-
 
 State *StateLoadFromFile(const char *fname)
 {
@@ -75,7 +62,7 @@ State *StateLoadFromFile(const char *fname)
             char cell = state->level->cells[y][x];
             Body body = {(x + 0.5)*TS, (y + 0.5)*TS, 0, 0};
 
-            if (cell=='@')
+            if (cell=='@' || cell=='i')
                 StateAddEntity(state, cell, body);
         }
     }
@@ -104,8 +91,8 @@ void StateFree(State *state)
     free(state);
 }
 
-const Entity *StateGetPlayer(const State *state){
-    const Entity *ent = NULL;
+Entity *StateGetPlayer(const State *state){
+    Entity *ent = NULL;
     for (int i = 0; i < state->entsN; i++)
     {
         if (state->ents[i].type == TYPE_PLAYER)
@@ -114,6 +101,33 @@ const Entity *StateGetPlayer(const State *state){
     return ent;
 }
 
+static void StateUpdateEntity(State *state, Entity *ent, int colliding)
+{
+    switch (ent->type)
+    {
+        case TYPE_PLAYER:
+        {
+            // Update player controls
+            if (IsKeyDown(KEY_RIGHT)) ent->body.vx += 0.1;
+            if (IsKeyDown(KEY_LEFT))  ent->body.vx -= 0.1;
+            if (IsKeyDown(KEY_UP))    ent->body.vy -= 0.1;
+            if (IsKeyDown(KEY_DOWN))  ent->body.vy += 0.1;
+            BodyLimitSpeed(&ent->body, 2.0);
+            if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT))
+                ent->body.vx *= 0.6;
+            if (!IsKeyDown(KEY_UP) && !IsKeyDown(KEY_DOWN))
+                ent->body.vy *= 0.6;
+
+        } break;
+
+        default:
+        {
+            break;
+        }
+    }
+}
+
+
 void StateUpdate(State *state)
 {
     for (int i = 0; i < state->entsN; i++)
@@ -121,5 +135,45 @@ void StateUpdate(State *state)
         Entity *ent = &state->ents[i];
         int colliding = UpdateBody(state->level, &ent->body);
         StateUpdateEntity(state, ent, colliding);
+    }
+
+    { // Wand update
+        int spellLen = strlen(state->wand.spell);
+        if (spellLen < MAX_SPELL_LENGHT)
+        {
+            Entity *player = StateGetPlayer(state);
+            int absorving = 0;
+            if (player)
+            {
+                for (int i = 0; i < state->entsN; i++)
+                {
+                    Entity *ent = &state->ents[i];
+                    if (ent->powerChar == 0)
+                        continue;
+                    if (state->wand.absorvingChar != 0 && state->wand.absorvingChar != ent->powerChar)
+                        continue;
+                    if (BodyDistance(player->body, ent->body) <= WAND_RADIOUS)
+                    {
+                        absorving = 1;
+                        state->wand.absorvingChar = ent->powerChar;
+                    }
+                }
+            }
+            if (absorving)
+                state->wand.absorvingTime++;
+            if (!absorving)
+            {
+                state->wand.absorvingChar = 0;
+                state->wand.absorvingTime = 0;
+            }
+
+            if (state->wand.absorvingTime >= WAND_ABSORV_TIME)
+            {
+                state->wand.spell[spellLen] = state->wand.absorvingChar;
+                state->wand.spell[spellLen+1] = '\0';
+                state->wand.absorvingChar = 0;
+                state->wand.absorvingTime = 0;
+            }
+        }
     }
 }

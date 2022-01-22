@@ -10,8 +10,12 @@ typedef struct {
 
 void BodyLimitSpeed(Body *body, float mag);
 
+// Retrieves the distance between two bodies (<0 means overlapping)
+float BodyDistance(Body body1, Body body2);
+
 // Updates body, retrieves 1 on collision with level
 int UpdateBody(const Level *level, Body *body);
+
 
 
 #endif

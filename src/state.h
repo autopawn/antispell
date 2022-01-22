@@ -8,11 +8,14 @@
 
 typedef enum {
     TYPE_PLAYER = '@',
+    TYPE_PLANT = 'i',
 } EntityType;
 
 typedef struct {
     Body body;
     EntityType type;
+    // Char that can be absorved by the wand
+    char powerChar;
 } Entity;
 
 typedef struct {
@@ -39,7 +42,7 @@ void StateFree(State *state);
 
 void StateUpdate(State *state);
 
-const Entity *StateGetPlayer(const State *state);
+Entity *StateGetPlayer(const State *state);
 
 
 

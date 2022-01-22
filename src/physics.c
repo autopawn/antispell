@@ -10,6 +10,12 @@ static float signF(float v)
     return (v > 0) - (v < 0);
 }
 
+float BodyDistance(Body body1, Body body2){
+    float dx = body1.x - body2.x;
+    float dy = body1.y - body2.y;
+    return sqrtf(dx*dx + dy*dy) - body1.rad - body2.rad;
+}
+
 static int BodyCollidesWithLevel(const Level *level, Body body)
 {
     int xi = (int)((body.x - SQRT2INV*body.rad)/TS);

@@ -1,6 +1,7 @@
 #include "draw.h"
 
 #include <raylib.h>
+#include <stdlib.h>
 #include <string.h>
 
 static const int TS = LEVEL_TILE_SIZE;
@@ -85,16 +86,28 @@ void DrawGUI(State *state)
 {
     float wandX = (GetScreenWidth() - wandTexture[0].width)/2.0;
     DrawTexture(wandTexture[0], wandX, -25, WHITE);
-    DrawTexture(wandTexture[1], wandX, -25, GRAY);
+    DrawTexture(wandTexture[1], wandX, -25, (state->wand.absorvingTime > 0)? SKYBLUE : GRAY);
 
     int spellLength = strlen(state->wand.spell);
+    char symbol[2];
+
     for (int i = 0; i < MAX_SPELL_LENGHT; i++)
     {
-        char symbol[2];
         symbol[0] = (i < spellLength)? state->wand.spell[i] : '-';
         symbol[1] = '\0';
         float symbX = wandX + (i+1)*wandTexture[0].width/(MAX_SPELL_LENGHT + 2.5);
         DrawText(symbol, symbX-2, 12, 32, BLACK);
         DrawText(symbol, symbX, 10, 32, WHITE);
+    }
+
+    if (state->wand.absorvingTime > 0)
+    {
+        symbol[0] = state->wand.absorvingChar;
+        symbol[1] = '\0';
+        float symbX = wandX + (MAX_SPELL_LENGHT + 1.3)*wandTexture[0].width/(MAX_SPELL_LENGHT + 2.5);
+        float movX = rand()%7 - 3;
+        float movY = rand()%7 - 3;
+        DrawText(symbol, symbX - 2 + movX, 12 + movY, 32, BLACK);
+        DrawText(symbol, symbX + movX, 10 + movY, 32, SKYBLUE);
     }
 }

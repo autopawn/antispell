@@ -41,9 +41,10 @@ const float HLEV_ZOOM_MULT = 1.04;
 static int framesCounter = 0;
 static int finishScreen = 0;
 
-Vector2 camCenter;
+static Vector2 camCenter;
 static State *state;
-Texture2D floorTexture;
+static Texture2D floorTexture;
+static int wandAbsorving;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -60,13 +61,22 @@ void InitGameplayScreen(void)
 
     framesCounter = 0;
     finishScreen = 0;
+    wandAbsorving = 0;
 }
 
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    for (int i = 0; i < 4; i++)
+    if (state->wand.absorvingTime > 0)
+    {
         StateUpdate(state);
+        wandAbsorving = 1;
+    }
+    else
+    {
+        for (int i = 0; i < 4; i++) StateUpdate(state);
+        wandAbsorving = 0;
+    }
 
     // Update camera
     const Entity *player = StateGetPlayer(state);
