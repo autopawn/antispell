@@ -52,7 +52,7 @@ State *StateCopy(const State *state);
 
 void StateFree(State *state);
 
-void StateUpdate(State *state);
+void StateUpdate(State *state, int process_pressed_keys);
 
 Entity *StateGetPlayer(const State *state);
 

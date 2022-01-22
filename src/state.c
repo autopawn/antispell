@@ -101,7 +101,7 @@ Entity *StateGetPlayer(const State *state){
     return ent;
 }
 
-static void StateUpdateEntity(State *state, Entity *ent, int colliding)
+static void StateUpdateEntity(State *state, Entity *ent, int colliding, int process_pressed_keys)
 {
     switch (ent->type)
     {
@@ -124,6 +124,13 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding)
             ent->lookX = ent->body.x + lookDeltaX/2.0;
             ent->lookY = ent->body.y + lookDeltaY/2.0;
 
+            if (process_pressed_keys && IsKeyPressed(KEY_BACKSPACE) && state->wand.spell[0] != '\0')
+            {
+                state->wand.spell[strlen(state->wand.spell) - 1] = '\0';
+                state->wand.signal = WANDSIGNAL_BACKSPACE;
+                state->wand.signalIntensity = 1.0;
+            }
+
         } break;
 
         default:
@@ -134,7 +141,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding)
 }
 
 
-void StateUpdate(State *state)
+void StateUpdate(State *state, int process_pressed_keys)
 {
     { // Wand update
         state->wand.signalIntensity *= 0.96;
@@ -204,6 +211,6 @@ void StateUpdate(State *state)
     {
         Entity *ent = &state->ents[i];
         int colliding = UpdateBody(state->level, &ent->body);
-        StateUpdateEntity(state, ent, colliding);
+        StateUpdateEntity(state, ent, colliding, process_pressed_keys);
     }
 }

@@ -73,12 +73,12 @@ void UpdateGameplayScreen(void)
 {
     if (state->wand.absorbingTime > 0)
     {
-        StateUpdate(state);
+        StateUpdate(state, 1);
         wandAbsorving = 1;
     }
     else
     {
-        for (int i = 0; i < 4; i++) StateUpdate(state);
+        for (int i = 0; i < 4; i++) StateUpdate(state, i == 0);
         wandAbsorving = 0;
     }
 
