@@ -33,7 +33,7 @@
 #include "draw.h"
 
 
-const float HLEV_ZOOM_MULT = 0.96;
+const float HLEV_ZOOM_MULT = 1.04;
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -82,16 +82,19 @@ void DrawGameplayScreen(void)
     cam.offset = (Vector2){screenW/2, screenH/2};
     cam.rotation = 0;
 
-    cam.zoom = HLEV_ZOOM_MULT;
+    cam.zoom = 1.0 / HLEV_ZOOM_MULT;
     BeginMode2D(cam);
         DrawState(state, 0);
     EndMode2D();
 
-    DrawRectangle(0, 0, screenW, screenH, (Color){0,0,0,128});
-
     cam.zoom = 1.0;
     BeginMode2D(cam);
         DrawState(state, 1);
+    EndMode2D();
+
+    cam.zoom = HLEV_ZOOM_MULT;
+    BeginMode2D(cam);
+        DrawState(state, 2);
     EndMode2D();
 
     DrawTextEx(font, "GAMEPLAY SCREEN", (Vector2){ 20, 10 }, font.baseSize*3, 4, MAROON);

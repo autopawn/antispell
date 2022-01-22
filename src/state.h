@@ -8,13 +8,29 @@
 typedef struct {
     float x, y, vx, vy;
     float rad;
-} ObjectPhy;
+} Body;
+
+typedef enum {
+    TYPE_PLAYER = '@',
+} EntityType;
+
+typedef struct {
+    Body body;
+    EntityType type;
+} Entity;
 
 typedef struct {
     Level *level;
+
+    int entsN;
+    Entity *ents;
 } State;
 
 State *StateLoadFromFile(const char *fname);
+
+State *StateCopy(const State *state);
+
+void StateUpdate(const State *state);
 
 void StateFree(State *state);
 
