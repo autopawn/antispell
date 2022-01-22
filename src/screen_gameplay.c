@@ -43,6 +43,7 @@ static int finishScreen = 0;
 
 Vector2 camCenter;
 static State *state;
+Texture2D floorTexture;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -54,6 +55,7 @@ void InitGameplayScreen(void)
     state = StateLoadFromFile("resources/levels/00.txt");
     LevelPrint(state->level);
 
+    floorTexture = LoadTexture("resources/fabric61.png");
     DrawLoadResources();
 
     framesCounter = 0;
@@ -97,7 +99,7 @@ void DrawGameplayScreen(void)
     const int screenW = GetScreenWidth();
     const int screenH = GetScreenHeight();
 
-    DrawRectangle(0, 0, screenW, screenH, BLACK);
+    DrawRectangle(0, 0, screenW, screenH, DARKGRAY);
 
     Camera2D cam;
     cam.target = camCenter;
@@ -108,6 +110,10 @@ void DrawGameplayScreen(void)
     BeginMode2D(cam);
         DrawState(state, 0);
     EndMode2D();
+
+    DrawTextureTiled(floorTexture,
+        (Rectangle){cam.target.x*cam.zoom, cam.target.y*cam.zoom, floorTexture.width, floorTexture.height},
+        (Rectangle){0, 0, screenW, screenH}, (Vector2){0,0}, 0, 1, WHITE);
 
     cam.zoom = 1.0;
     BeginMode2D(cam);
@@ -125,6 +131,7 @@ void DrawGameplayScreen(void)
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
+    UnloadTexture(floorTexture);
     DrawUnloadResources();
     StateFree(state);
 }
