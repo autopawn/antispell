@@ -7,14 +7,62 @@
 
 static const int TS = LEVEL_TILE_SIZE;
 
+static void StateAddEntity(State *state, EntityType type, Body body)
+{
+    // Extend vector capacity
+    if (state->entsN == state->entsCapacity)
+    {
+        state->entsCapacity *= 2;
+        state->ents = realloc(state->ents, sizeof(Entity) * state->entsCapacity);
+        assert(state->ents != NULL);
+    }
+
+    Entity *ent = &state->ents[state->entsN];
+    state->entsN++;
+    memset(ent, 0, sizeof(Entity));
+    ent->type = type;
+    ent->body = body;
+    ent->body.rad = 0.25*TS;
+
+    switch (ent->type)
+    {
+        case TYPE_PLAYER:
+        {
+            break;
+        }
+    }
+}
+
+static void StateUpdateEntity(State *state, Entity *ent, int colliding)
+{
+    switch (ent->type)
+    {
+        case TYPE_PLAYER:
+        {
+            // Update player controls
+            if (IsKeyDown(KEY_RIGHT)) ent->body.vx += 0.1;
+            if (IsKeyDown(KEY_LEFT))  ent->body.vx -= 0.1;
+            if (IsKeyDown(KEY_UP))    ent->body.vy -= 0.1;
+            if (IsKeyDown(KEY_DOWN))  ent->body.vy += 0.1;
+            BodyLimitSpeed(&ent->body, 2.0);
+            if (!IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT))
+                ent->body.vx *= 0.6;
+            if (!IsKeyDown(KEY_UP) && !IsKeyDown(KEY_DOWN))
+                ent->body.vy *= 0.6;
+
+        } break;
+    }
+}
+
+
 State *StateLoadFromFile(const char *fname)
 {
     State *state = malloc(sizeof(State));
     assert(state != NULL);
     state->level = LevelLoadFromFile(fname);
 
-    int entsSize = 4;
-    state->ents = malloc(sizeof(Entity) * entsSize);
+    state->entsCapacity = 4;
+    state->ents = malloc(sizeof(Entity) * state->entsCapacity);
     assert(state->ents != NULL);
     state->entsN = 0;
 
@@ -24,24 +72,10 @@ State *StateLoadFromFile(const char *fname)
         for (int x = 0; x < state->level->sizeX; x++)
         {
             char cell = state->level->cells[y][x];
-            Entity *ent = &state->ents[state->entsN];
+            Body body = {(x + 0.5)*TS, (y + 0.5)*TS, 0, 0};
 
-            switch (cell)
-            {
-                case '@':
-                    state->entsN++;
-                    ent->type = TYPE_PLAYER;
-                    ent->body = (Body){(x + 0.5)*TS, (y + 0.5)*TS, 0, 0, 0.25*TS};
-                break;
-            }
-
-
-            if (state->entsN == entsSize)
-            {
-                entsSize *= 2;
-                state->ents = realloc(state->ents, sizeof(Entity) * entsSize);
-                assert(state->ents != NULL);
-            }
+            if (cell=='@')
+                StateAddEntity(state, cell, body);
         }
     }
 
@@ -79,19 +113,12 @@ const Entity *StateGetPlayer(const State *state){
     return ent;
 }
 
-void StateUpdate(const State *state)
+void StateUpdate(State *state)
 {
     for (int i = 0; i < state->entsN; i++)
     {
         Entity *ent = &state->ents[i];
         int colliding = UpdateBody(state->level, &ent->body);
-
-        if (ent->type == TYPE_PLAYER)
-        {
-            if (IsKeyPressed(KEY_LEFT))  ent->body.vx = -4;
-            if (IsKeyPressed(KEY_RIGHT)) ent->body.vx = +4;
-            if (IsKeyPressed(KEY_UP))    ent->body.vy = -4;
-            if (IsKeyPressed(KEY_DOWN))  ent->body.vy = +4;
-        }
+        StateUpdateEntity(state, ent, colliding);
     }
 }

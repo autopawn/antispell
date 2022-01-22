@@ -8,6 +8,8 @@ typedef struct {
     float rad;
 } Body;
 
+void BodyLimitSpeed(Body *body, float mag);
+
 // Updates body, retrieves 1 on collision with level
 int UpdateBody(const Level *level, Body *body);
 

@@ -65,7 +65,8 @@ void InitGameplayScreen(void)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    StateUpdate(state);
+    for (int i = 0; i < 4; i++)
+        StateUpdate(state);
 
     // Update camera
     const Entity *player = StateGetPlayer(state);

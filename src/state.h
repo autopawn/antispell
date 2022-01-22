@@ -16,6 +16,7 @@ typedef struct {
 typedef struct {
     Level *level;
 
+    int entsCapacity;
     int entsN;
     Entity *ents;
 } State;
@@ -27,7 +28,7 @@ State *StateCopy(const State *state);
 
 void StateFree(State *state);
 
-void StateUpdate(const State *state);
+void StateUpdate(State *state);
 
 const Entity *StateGetPlayer(const State *state);
 

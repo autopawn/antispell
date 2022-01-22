@@ -38,6 +38,7 @@ static void DrawLevel(Level *level, int hlev)
                     DrawText(symbol, rect.x, rect.y, TS, WHITE);
                 }
             }
+            if (cell == '#' && hlev == 1) DrawRectangleRec(rect, BLACK);
             if (cell == '#' && hlev == 2) DrawRectangleRec(rect, GRAY);
         }
     }

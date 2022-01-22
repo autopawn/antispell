@@ -93,3 +93,12 @@ int UpdateBody(const Level *level, Body *body)
 {
     return moveBody(level, body, body->vx, body->vy);
 }
+
+void BodyLimitSpeed(Body *body, float mag){
+    float cmag = sqrtf( body->vx*body->vx + body->vy*body->vy);
+    if (cmag > mag)
+    {
+        body->vx *= mag / cmag;
+        body->vy *= mag / cmag;
+    }
+}
