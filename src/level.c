@@ -7,6 +7,20 @@
 
 #include "raylib.h"
 
+static int CellIsSurroundedWall(const Level *level, int y, int x)
+{
+    for (int yy = y - 1; yy <= y + 1; yy++)
+    {
+        for (int xx = x - 1; xx <= x + 1; xx++)
+        {
+            if (xx < 0 || yy < 0 || xx >= level->sizeX || yy >= level->sizeY) continue;
+            if (level->cells[yy][xx] != '#' && level->cells[yy][xx] != '~')
+                return 0;
+        }
+    }
+    return 1;
+}
+
 Level *LevelLoadFromFile(const char *fname){
     char *text = LoadFileText(fname);
     if (!text)
@@ -35,19 +49,18 @@ Level *LevelLoadFromFile(const char *fname){
             assert(x < MAX_LEVEL_CELLS_X);
             assert(y < MAX_LEVEL_CELLS_Y);
             level->cells[y + 1][x + 1] = c;
-            x++;
             level->sizeY = y + 3;
             if (x + 3 > level->sizeX) level->sizeX = x + 3;
+            x++;
         }
     }
 
-    //
+    // Set not written cells to space
     for (y = 0; y < level->sizeY; y++)
     {
         for (x = 0; x < level->sizeX; x++)
         {
-            if (level->cells[y][x] == '\0')
-                level->cells[y][x] = ' ';
+            if (level->cells[y][x] == '\0') level->cells[y][x] = ' ';
         }
     }
 
@@ -61,6 +74,15 @@ Level *LevelLoadFromFile(const char *fname){
     {
         level->cells[0][x] = '#';
         level->cells[level->sizeY - 1][x] = '#';
+    }
+
+    // Detect surrounded walls and mark them as void
+    for (y = 0; y < level->sizeY; y++)
+    {
+        for (x = 0; x < level->sizeX; x++)
+        {
+            if (CellIsSurroundedWall(level, y, x)) level->cells[y][x] = '~';
+        }
     }
 
     UnloadFileText(text);

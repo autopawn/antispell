@@ -380,7 +380,8 @@ PROJECT_SOURCE_FILES ?= \
     screen_gameplay.c \
     screen_ending.c \
     level.c \
-    state.c
+    state.c \
+    draw.c
 
 # Define all object files from source files
 OBJS = $(patsubst %.c, %.o, $(PROJECT_SOURCE_FILES))

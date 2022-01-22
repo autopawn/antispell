@@ -3,6 +3,8 @@
 
 #include "level.h"
 
+#define LEVEL_TILE_SIZE 50
+
 typedef struct {
     float x, y, vx, vy;
     float rad;

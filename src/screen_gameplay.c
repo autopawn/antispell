@@ -30,7 +30,10 @@
 
 #include "screens.h"
 #include "state.h"
+#include "draw.h"
 
+
+const float HLEV_ZOOM_MULT = 0.96;
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -56,7 +59,7 @@ void InitGameplayScreen(void)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    // TODO: Update GAMEPLAY screen variables here!
+    framesCounter++;
 
     // Press enter or tap to change to ENDING screen
     if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
@@ -69,7 +72,27 @@ void UpdateGameplayScreen(void)
 // Gameplay Screen Draw logic
 void DrawGameplayScreen(void)
 {
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), PURPLE);
+    const int screenW = GetScreenWidth();
+    const int screenH = GetScreenHeight();
+
+    DrawRectangle(0, 0, screenW, screenH, BLACK);
+
+    Camera2D cam;
+    cam.target = (Vector2){100 + framesCounter * 0.5, 100 + framesCounter * 0.2};
+    cam.offset = (Vector2){screenW/2, screenH/2};
+    cam.rotation = 0;
+
+    cam.zoom = HLEV_ZOOM_MULT;
+    BeginMode2D(cam);
+        DrawState(state, 0);
+    EndMode2D();
+
+    DrawRectangle(0, 0, screenW, screenH, (Color){0,0,0,128});
+
+    cam.zoom = 1.0;
+    BeginMode2D(cam);
+        DrawState(state, 1);
+    EndMode2D();
 
     DrawTextEx(font, "GAMEPLAY SCREEN", (Vector2){ 20, 10 }, font.baseSize*3, 4, MAROON);
     DrawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
