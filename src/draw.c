@@ -43,7 +43,8 @@ static void DrawLevel(Level *level, DrawLayer layer)
                             char symbol[2];
                             symbol[0] = cell;
                             symbol[1] = '\0';
-                            DrawText(symbol, rect.x, rect.y, TS, YELLOW);
+                            int txtWidth = MeasureText(symbol, TS);
+                            DrawText(symbol, rect.x + (TS - txtWidth)/2.0, rect.y, TS, YELLOW);
                         }
                         break;
                     }
@@ -66,7 +67,7 @@ void DrawState(State *state, DrawLayer layer){
         const Entity *ent = &state->ents[i];
         if (layer == LAYER0_RUG)
         {
-            DrawCircle(ent->body.x, ent->body.y, ent->body.rad, DARKGRAY);
+            DrawCircle(ent->body.x, ent->body.y, ent->body.rad, (Color){0, 0, 0, 128});
         }
         if (layer == LAYER2_ENTS)
         {
