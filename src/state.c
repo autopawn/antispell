@@ -33,7 +33,7 @@ static Entity *StateAddEntity(State *state, EntityType type, Body body)
     switch (ent->type)
     {
         case TYPE_PLANT_I:
-        case TYPE_PLANT_E:
+        case TYPE_PLANT_C:
         {
             ent->powerChar = ent->type;
             break;
@@ -137,7 +137,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             }
         } break;
 
-        case TYPE_MAGE_C:
+        case TYPE_MAGE_E:
         {
             const Entity *player = StateGetPlayer(state);
             ent->cooldown--;
@@ -163,6 +163,15 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             }
         }
 
+        case TYPE_PROJECTILE:
+        {
+            if (colliding)
+            {
+                ent->terminate = 1;
+            }
+            break;
+        }
+
         default:
         {
             break;
@@ -173,6 +182,19 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
 
 void StateUpdate(State *state, int process_pressed_keys)
 {
+    // Destroy entities marked for termination
+    int entsN2 = 0;
+    for(int i = 0; i < state->entsN; i++)
+    {
+        if (!state->ents[i].terminate)
+        {
+            state->ents[entsN2] = state->ents[i];
+            entsN2++;
+        }
+    }
+    state->entsN = entsN2;
+
+
     { // Wand update
         state->wand.signalIntensity *= 0.96;
 

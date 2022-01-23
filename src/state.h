@@ -9,14 +9,15 @@
 typedef enum {
     TYPE_PLAYER = '@',
     TYPE_PLANT_I = 'I',
-    TYPE_PLANT_E = 'E',
-    TYPE_MAGE_C = 'C',
+    TYPE_PLANT_C = 'C',
+    TYPE_MAGE_E = 'E',
     TYPE_PROJECTILE,
 } EntityType;
 
 typedef struct {
     Body body;
     EntityType type;
+    int terminate;
     // Char that can be absorved by the wand
     char powerChar;
     // Position were it is looking
