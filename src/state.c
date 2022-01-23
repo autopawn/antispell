@@ -129,7 +129,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             ent->lookX = ent->body.x + lookDeltaX/2.0;
             ent->lookY = ent->body.y + lookDeltaY/2.0;
 
-            if (process_pressed_keys && IsKeyPressed(KEY_BACKSPACE) && state->wand.spell[0] != '\0')
+            if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && state->wand.spell[0] != '\0')
             {
                 state->wand.spell[strlen(state->wand.spell) - 1] = '\0';
                 state->wand.signal = WANDSIGNAL_BACKSPACE;
