@@ -8,7 +8,10 @@
 
 typedef enum {
     TYPE_PLAYER = '@',
-    TYPE_PLANT = 'I',
+    TYPE_PLANT_I = 'I',
+    TYPE_PLANT_E = 'E',
+    TYPE_MAGE_C = 'C',
+    TYPE_PROJECTILE,
 } EntityType;
 
 typedef struct {
@@ -18,6 +21,8 @@ typedef struct {
     char powerChar;
     // Position were it is looking
     float lookX, lookY;
+
+    int cooldown;
 } Entity;
 
 typedef enum

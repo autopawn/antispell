@@ -9,9 +9,11 @@
 static const float WAND_RADIOUS = 30;
 static const int WAND_ABSORV_TIME = 30;
 
+static const float ENEMY_VISION_RANGE = 300;
+
 static const int TS = LEVEL_TILE_SIZE;
 
-static void StateAddEntity(State *state, EntityType type, Body body)
+static Entity *StateAddEntity(State *state, EntityType type, Body body)
 {
     // Extend vector capacity
     if (state->entsN == state->entsCapacity)
@@ -30,9 +32,10 @@ static void StateAddEntity(State *state, EntityType type, Body body)
 
     switch (ent->type)
     {
-        case TYPE_PLANT:
+        case TYPE_PLANT_I:
+        case TYPE_PLANT_E:
         {
-            ent->powerChar = 'I';
+            ent->powerChar = ent->type;
             break;
         }
 
@@ -41,6 +44,7 @@ static void StateAddEntity(State *state, EntityType type, Body body)
             break;
         }
     }
+    return ent;
 }
 
 State *StateLoadFromFile(const char *fname)
@@ -133,10 +137,30 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             }
         } break;
 
-        case 'C':
+        case TYPE_MAGE_C:
         {
             const Entity *player = StateGetPlayer(state);
-            printf("Watching %d\n", LineOfSight(state->level, ent->body, player->body));
+            ent->cooldown--;
+            if (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE &&
+                        LineOfSight(state->level, ent->body, player->body))
+            {
+                ent->lookX = player->body.x;
+                ent->lookY = player->body.y;
+                if (ent->cooldown < 0)
+                {
+                    ent->cooldown = 200;
+
+                    Body body = {
+                        .x=ent->body.x,
+                        .y=ent->body.y,
+                        .vx = player->body.x - ent->body.x,
+                        .vy = player->body.y - ent->body.y,
+                    };
+                    BodyLimitSpeed(&body, 2.0);
+                    Entity *bullet = StateAddEntity(state, TYPE_PROJECTILE, body);
+                    bullet->powerChar = ent->type;
+                }
+            }
         }
 
         default:

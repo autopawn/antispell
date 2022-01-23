@@ -70,11 +70,19 @@ void DrawState(State *state, DrawLayer layer){
         }
         if (layer == LAYER2_ENTS)
         {
-            DrawCircle(ent->body.x, ent->body.y, ent->body.rad, RED);
-
             char symbol[2];
-            symbol[0] = (char) ent->type;
             symbol[1] = '\0';
+
+            if (ent->type == TYPE_PROJECTILE)
+            {
+                DrawCircle(ent->body.x, ent->body.y, ent->body.rad, YELLOW);
+                symbol[0] = (char) ent->powerChar;
+                DrawText(symbol, ent->body.x - 8, ent->body.y - 8, 16, ORANGE);
+                continue;
+            }
+
+            DrawCircle(ent->body.x, ent->body.y, ent->body.rad, RED);
+            symbol[0] = (char) ent->type;
             DrawText(symbol, ent->body.x - 8, ent->body.y - 8, 16, ORANGE);
         }
 
