@@ -3,6 +3,7 @@
 #include <raylib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <spell_catalog.h>
 
 static const int TS = LEVEL_TILE_SIZE;
 
@@ -95,18 +96,21 @@ void DrawGUI(State *state)
 {
     float wandX = (GetScreenWidth() - wandTexture[0].width)/2.0;
 
+    int spellValid = SpellIndex(state->wand.spell) >= 0;
+
     char symbol[2];
     int spellLength = strlen(state->wand.spell);
 
-    Color color = DARKGRAY;
-    if (state->wand.signal == WANDSIGNAL_BACKSPACE) color = RED;
-    if (state->wand.signal == WANDSIGNAL_ABSORB) color = SKYBLUE;
-    if (state->wand.signal == WANDSIGNAL_ABSORBED) color = YELLOW;
-    if (state->wand.signal == WANDSIGNAL_FULL) color = DARKBLUE;
+    Color color = spellValid? GREEN : DARKGRAY;
+    Color signalColor = DARKGRAY;
+    if (state->wand.signal == WANDSIGNAL_BACKSPACE) signalColor = RED;
+    if (state->wand.signal == WANDSIGNAL_ABSORB) signalColor = SKYBLUE;
+    if (state->wand.signal == WANDSIGNAL_ABSORBED) signalColor = YELLOW;
+    if (state->wand.signal == WANDSIGNAL_FULL) signalColor = DARKBLUE;
     float si = state->wand.signalIntensity;
-    color.r = (unsigned char)(color.r*si + DARKGRAY.r*(1.0 - si));
-    color.g = (unsigned char)(color.g*si + DARKGRAY.g*(1.0 - si));
-    color.b = (unsigned char)(color.b*si + DARKGRAY.b*(1.0 - si));
+    color.r = (unsigned char)(signalColor.r*si + color.r*(1.0 - si));
+    color.g = (unsigned char)(signalColor.g*si + color.g*(1.0 - si));
+    color.b = (unsigned char)(signalColor.b*si + color.b*(1.0 - si));
 
     DrawTexture(wandTexture[0], wandX, -25, WHITE);
     DrawTexture(wandTexture[1], wandX, -25, color);
@@ -117,7 +121,7 @@ void DrawGUI(State *state)
         symbol[1] = '\0';
         float symbX = wandX + (i+1)*wandTexture[0].width/(MAX_SPELL_LENGHT + 2.5);
         DrawText(symbol, symbX-2, 12, 32, BLACK);
-        DrawText(symbol, symbX, 10, 32, WHITE);
+        DrawText(symbol, symbX, 10, 32, spellValid? GREEN : WHITE);
     }
 
     if (state->wand.absorbingTime > 0)
