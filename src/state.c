@@ -6,6 +6,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "spell_catalog.h"
+
 static const float WAND_RADIOUS = 30;
 static const int WAND_ABSORV_TIME = 30;
 
@@ -28,12 +30,18 @@ static Entity *StateAddEntity(State *state, EntityType type, Body body)
     memset(ent, 0, sizeof(Entity));
     ent->type = type;
     ent->body = body;
-    ent->body.rad = 0.25*TS;
+    ent->body.rad = (body.rad == 0)? 0.25*TS : body.rad;
 
     switch (ent->type)
     {
         case TYPE_PLANT_I:
         case TYPE_PLANT_C:
+        {
+            ent->powerChar = ent->type;
+            break;
+        }
+
+        case TYPE_MAGE_E:
         {
             ent->powerChar = ent->type;
             break;
@@ -108,6 +116,25 @@ Entity *StateGetPlayer(const State *state){
 
 static void StateUpdateEntity(State *state, Entity *ent, int colliding, int process_pressed_keys)
 {
+    // Status control
+    if (ent->status == STATUS_FROZEN && ent->statusTime >= 800)
+    {
+        ent->status = STATUS_NORMAL;
+        ent->statusTime = 0;
+    }
+    ent->statusTime++;
+
+    if (ent->status == STATUS_FROZEN) return;
+
+    // Cooldown update
+    ent->cooldown--;
+
+    // Current cell
+    int cellX = ent->body.x/TS;
+    int cellY = ent->body.y/TS;
+    char floor = LevelGetAt(state-> level, cellY, cellX);
+
+    // Entity intelligence
     switch (ent->type)
     {
         case TYPE_PLAYER:
@@ -135,12 +162,42 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 state->wand.signal = WANDSIGNAL_BACKSPACE;
                 state->wand.signalIntensity = 1.0;
             }
+            // Attack update
+            Spell spell = GetSpell(state->wand.spell);
+            int spellValid = spell.type != SPELLTYPE_NONE;
+            if (!spellValid)
+                ent->attackCalled = 0;
+
+            if (ent->attackCalled && ent->cooldown < 0)
+            {
+                // Cast spell
+                Body body = {
+                    .x=ent->body.x,
+                    .y=ent->body.y,
+                    .vx = ent->lookX - ent->body.x,
+                    .vy = ent->lookY - ent->body.y,
+                    .rad = 0.3*TS,
+                };
+                if (BodySetSpeed(&body, 4.0) == 1)
+                {
+                    Entity *attack = StateAddEntity(state, TYPE_SPELL, body);
+                    attack->spell = spell;
+
+                    state->wand.signal = WANDSIGNAL_SPELL;
+                    state->wand.signalIntensity = 1.0;
+
+                    ent->attackCalled = 0;
+                    ent->cooldown = 30;
+                }
+            }
+
+            if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                ent->attackCalled = 1;
         } break;
 
         case TYPE_MAGE_E:
         {
             const Entity *player = StateGetPlayer(state);
-            ent->cooldown--;
             if (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE &&
                         LineOfSight(state->level, ent->body, player->body))
             {
@@ -166,10 +223,36 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
         case TYPE_PROJECTILE:
         {
             if (colliding)
+                ent->terminate = 1;
+            break;
+        }
+
+        case TYPE_SPELL:
+        {
+            if (colliding)
+                ent->terminate = 1;
+            // Froze lave floor
+            if (floor == 'l')
             {
+                state->level->cells[cellY][cellX] = ' ';
                 ent->terminate = 1;
             }
-            break;
+
+            // Froze other entities
+            for(int i = 0; i < state->entsN; i++)
+            {
+                Entity *other = &state->ents[i];
+                int colli = 1;
+                colli = colli && other->type != TYPE_PLAYER;
+                colli = colli && other->type != TYPE_SPELL;
+                colli = colli && other->type != TYPE_PROJECTILE;
+                if (colli && ent->spell.type == SPELLTYPE_ICE && BodyDistance(ent->body, other->body) <= 0)
+                {
+                    other->status = STATUS_FROZEN;
+                    other->statusTime = 0;
+                    ent->terminate = 1;
+                }
+            }
         }
 
         default:
@@ -265,4 +348,7 @@ void StateUpdate(State *state, int process_pressed_keys)
         int colliding = UpdateBody(state->level, &ent->body);
         StateUpdateEntity(state, ent, colliding, process_pressed_keys);
     }
+
+    // Update frame counter
+    state->frame++;
 }

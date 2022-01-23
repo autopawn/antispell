@@ -109,6 +109,14 @@ void BodyLimitSpeed(Body *body, float mag){
     }
 }
 
+int BodySetSpeed(Body *body, float mag){
+    float cmag = sqrtf( body->vx*body->vx + body->vy*body->vy);
+    if (cmag <= 0) return 0;
+    body->vx *= mag / cmag;
+    body->vy *= mag / cmag;
+    return 1;
+}
+
 // Moves to the next cell, returns 0 if already in target's cell.
 static int cellStepXY(float *posX, float *posY, float tgtX, float tgtY)
 {

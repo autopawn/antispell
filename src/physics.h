@@ -8,7 +8,12 @@ typedef struct {
     float rad;
 } Body;
 
+// Limits the body speed to the given magnitude
 void BodyLimitSpeed(Body *body, float mag);
+
+// Makes the body speed have the given magnitude, preserving the angle.
+// Retrieves 0 ff current speed is 0.
+int BodySetSpeed(Body *body, float mag);
 
 // Retrieves the distance between two bodies (<0 means overlapping)
 float BodyDistance(Body body1, Body body2);

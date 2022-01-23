@@ -16,6 +16,15 @@ static inline int LevelCellIsSolid(char cell)
     return cell == '#' || cell == '~';
 }
 
+static inline char LevelGetAt(const Level *level, int y, int x)
+{
+    if (x < 0) return '~';
+    if (y < 0) return '~';
+    if (x >= level->sizeX) return '~';
+    if (y >= level->sizeY) return '~';
+    return level->cells[y][x];
+}
+
 
 Level *LevelLoadFromFile(const char *fname);
 

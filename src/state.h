@@ -2,6 +2,7 @@
 #define STATE_H
 
 #include "level.h"
+#include "spell_catalog.h"
 #include "physics.h"
 
 #define MAX_SPELL_LENGHT 5
@@ -12,7 +13,13 @@ typedef enum {
     TYPE_PLANT_C = 'C',
     TYPE_MAGE_E = 'E',
     TYPE_PROJECTILE,
+    TYPE_SPELL,
 } EntityType;
+
+typedef enum {
+    STATUS_NORMAL,
+    STATUS_FROZEN,
+} EntityStatus;
 
 typedef struct {
     Body body;
@@ -20,9 +27,15 @@ typedef struct {
     int terminate;
     // Char that can be absorved by the wand
     char powerChar;
+    // Spell attributes for TYPE_SPELL entities
+    Spell spell;
     // Position were it is looking
     float lookX, lookY;
 
+    EntityStatus status;
+    int statusTime;
+
+    int attackCalled;
     int cooldown;
 } Entity;
 
@@ -32,9 +45,12 @@ typedef enum
     WANDSIGNAL_ABSORBED = 1,
     WANDSIGNAL_FULL = 2,
     WANDSIGNAL_BACKSPACE = 3,
+    WANDSIGNAL_SPELL = 4,
 } WandSignal;
 
 typedef struct {
+    int frame;
+
     Level *level;
 
     int entsCapacity;
