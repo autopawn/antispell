@@ -43,8 +43,10 @@ static int finishScreen = 0;
 
 static Vector2 camCenter;
 static State *state;
-static Texture2D floorTexture;
 static int wandAbsorving;
+
+static Texture2D floorTexture;
+static Sound timeSpeedSfx[2];
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -58,6 +60,9 @@ void InitGameplayScreen(void)
 
     floorTexture = LoadTexture("resources/fabric61.png");
     DrawLoadResources();
+
+    timeSpeedSfx[0] = LoadSound("resources/sfx/time_slowdown.wav");
+    timeSpeedSfx[1] = LoadSound("resources/sfx/time_speedup.wav");
 
     framesCounter = 0;
     finishScreen = 0;
@@ -73,11 +78,15 @@ void UpdateGameplayScreen(void)
 {
     if (state->wand.absorbingTime > 0)
     {
+        if (!wandAbsorving)
+            PlaySound(timeSpeedSfx[0]);
         StateUpdate(state, 1);
         wandAbsorving = 1;
     }
     else
     {
+        if (wandAbsorving)
+            PlaySound(timeSpeedSfx[1]);
         for (int i = 0; i < 4; i++) StateUpdate(state, i == 0);
         wandAbsorving = 0;
     }
@@ -145,6 +154,8 @@ void DrawGameplayScreen(void)
 void UnloadGameplayScreen(void)
 {
     UnloadTexture(floorTexture);
+    UnloadSound(timeSpeedSfx[0]);
+    UnloadSound(timeSpeedSfx[1]);
     DrawUnloadResources();
     StateFree(state);
 }
