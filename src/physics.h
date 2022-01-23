@@ -16,6 +16,9 @@ float BodyDistance(Body body1, Body body2);
 // Updates body, retrieves 1 on collision with level
 int UpdateBody(const Level *level, Body *body);
 
+// Wheter there is a line of sight between body1 and body2
+int LineOfSight(const Level *level, Body body1, Body body2);
+
 
 
 #endif

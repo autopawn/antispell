@@ -2,6 +2,7 @@
 
 #include <raylib.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
@@ -130,8 +131,13 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 state->wand.signal = WANDSIGNAL_BACKSPACE;
                 state->wand.signalIntensity = 1.0;
             }
-
         } break;
+
+        case 'C':
+        {
+            const Entity *player = StateGetPlayer(state);
+            printf("Watching %d\n", LineOfSight(state->level, ent->body, player->body));
+        }
 
         default:
         {

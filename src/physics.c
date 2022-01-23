@@ -108,3 +108,48 @@ void BodyLimitSpeed(Body *body, float mag){
         body->vy *= mag / cmag;
     }
 }
+
+// Moves to the next cell, returns 0 if already in target's cell.
+static int cellStepXY(float *posX, float *posY, float tgtX, float tgtY)
+{
+    // Direction
+    int dirX = tgtX > (*posX);
+    int dirY = tgtY > (*posY);
+    // Current cell
+    int cellX = (*posX)/TS;
+    int cellY = (*posY)/TS;
+    // Check if already in target cell
+    int tgtCellX = tgtX/TS;
+    int tgtCellY = tgtY/TS;
+    if (cellX == tgtCellX && cellY == tgtCellY) return 0;
+    // Remaining movement within the cell
+    float remX = (dirX > 0)? (cellX + 1)*TS + 0.25 - (*posX) : cellX*TS - 0.25 - (*posX);
+    float remY = (dirY > 0)? (cellY + 1)*TS + 0.25 - (*posY) : cellY*TS - 0.25 - (*posY);
+    // Check which movement will be performed first
+    if (cellX != tgtCellX && fabsf(remX*(tgtY - (*posY))) < fabsf(remY*(tgtX - (*posX))))
+        *posX += remX;
+    else
+        *posY += remY;
+    return 1;
+}
+
+int LineOfSight(const Level *level, Body body1, Body body2)
+{
+    // Current position of the ray
+    float rayX, rayY;
+    rayX = body1.x;
+    rayY = body1.y;
+    do
+    {
+        // Current cell of the ray
+        int cellX = rayX/TS;
+        int cellY = rayY/TS;
+        if(rayX < 0 || cellX >= level->sizeX) return 0;
+        if(rayY < 0 || cellY >= level->sizeY) return 0;
+        // Check if there is an intersection with the current cell
+        if (LevelCellIsSolid(level->cells[cellY][cellX]))
+            return 0;
+    }while(cellStepXY(&rayX, &rayY, body2.x, body2.y));
+    // No object blocking
+    return 1;
+}
