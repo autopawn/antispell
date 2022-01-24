@@ -1,26 +1,46 @@
 #include "draw.h"
 
 #include <raylib.h>
+
 #include <stdlib.h>
 #include <string.h>
-#include <spell_catalog.h>
+#include <math.h>
+
+#include "spell_catalog.h"
 
 static const int TS = LEVEL_TILE_SIZE;
 
 static Texture2D wandTexture[2];
+static Texture2D mageTexture[2];
 
 void DrawLoadResources()
 {
     wandTexture[0] = LoadTexture("resources/gui/wand0.png");
     wandTexture[1] = LoadTexture("resources/gui/wand1.png");
+    mageTexture[0] = LoadTexture("resources/sprites/mage0.png");
+    mageTexture[1] = LoadTexture("resources/sprites/mage1.png");
 }
 
 void DrawUnloadResources()
 {
     UnloadTexture(wandTexture[0]);
     UnloadTexture(wandTexture[1]);
+    UnloadTexture(mageTexture[0]);
+    UnloadTexture(mageTexture[1]);
 }
 
+static Color GetStatusColor(EntityStatus status)
+{
+    if (status == STATUS_FROZEN) return SKYBLUE;
+    return WHITE;
+}
+
+static Color GetEntityColor(EntityType type)
+{
+    if (type == TYPE_PLAYER) return LIGHTGRAY;
+    if (type == TYPE_MAGE_E) return GREEN;
+    return WHITE;
+}
 
 static void DrawLevel(Level *level, DrawLayer layer)
 {
@@ -57,6 +77,10 @@ static void DrawLevel(Level *level, DrawLayer layer)
     }
 }
 
+static int isWhite(Color col){
+    return col.r == 255 && col.g == 255 && col.b == 255 && col.a == 255;
+}
+
 
 void DrawState(State *state, DrawLayer layer){
     // Draw level
@@ -75,35 +99,54 @@ void DrawState(State *state, DrawLayer layer){
             char symbol[2];
             symbol[1] = '\0';
 
-            if (ent->type == TYPE_PROJECTILE)
+            switch (ent->type)
             {
-                DrawCircle(ent->body.x, ent->body.y, ent->body.rad, YELLOW);
-                symbol[0] = (char) ent->powerChar;
-                int textW = MeasureText(symbol, 24);
-                DrawText(symbol, ent->body.x - textW/2.0, ent->body.y - 12, 24, ORANGE);
-                continue;
+                case TYPE_PROJECTILE:
+                {
+                    DrawCircle(ent->body.x, ent->body.y, ent->body.rad, YELLOW);
+                    symbol[0] = (char) ent->powerChar;
+                    int textW = MeasureText(symbol, 24);
+                    DrawText(symbol, ent->body.x - textW/2.0, ent->body.y - 12, 24, ORANGE);
+                    break;
+                }
+                case TYPE_SPELL:
+                {
+                    Color spellColor = (Color){
+                            ent->spell.color.r, ent->spell.color.g, ent->spell.color.b, ent->spell.color.a};
+                    DrawCircle(ent->body.x, ent->body.y, ent->body.rad, spellColor);
+
+                    int spelli = (ent->statusTime/24)%(1+strlen(ent->spell.name));
+                    symbol[0] = (char) ent->spell.name[spelli];
+                    int textW = MeasureText(symbol, 24);
+                    DrawText(symbol, ent->body.x - textW/2.0, ent->body.y - 12, 24, BLACK);
+                    break;
+                }
+                case TYPE_PLAYER:
+                case TYPE_MAGE_E:
+                {
+                    float rotation = atan2((ent->lookY - ent->body.y), ent->lookX - ent->body.x);
+                    rotation = (rotation/M_PI)*180;
+
+                    Rectangle src = {0, 0, mageTexture[0].width, mageTexture[0].height};
+                    Rectangle dst = {ent->body.x, ent->body.y, 3*ent->body.rad, 3*ent->body.rad};
+                    Vector2 origin = {dst.width/2, dst.height/2};
+
+                    Color statusColor = GetStatusColor(ent->status);
+                    Color entColor = isWhite(statusColor)? GetEntityColor(ent->type) : statusColor;
+
+                    DrawTexturePro(mageTexture[0], src, dst, origin, rotation, entColor);
+                    DrawTexturePro(mageTexture[1], src, dst, origin, rotation, statusColor);
+                    break;
+                }
+                default:
+                {
+                    DrawCircle(ent->body.x, ent->body.y, ent->body.rad, (ent->status == STATUS_FROZEN)? SKYBLUE : RED);
+                    symbol[0] = (char) ent->type;
+                    DrawText(symbol, ent->body.x - 8, ent->body.y - 8, 16, ORANGE);
+                }
             }
-
-            if (ent->type == TYPE_SPELL)
-            {
-                Color spellColor = (Color){
-                        ent->spell.color.r, ent->spell.color.g, ent->spell.color.b, ent->spell.color.a};
-                DrawCircle(ent->body.x, ent->body.y, ent->body.rad, spellColor);
-
-                int spelli = (ent->statusTime/24)%(1+strlen(ent->spell.name));
-                symbol[0] = (char) ent->spell.name[spelli];
-                int textW = MeasureText(symbol, 24);
-                DrawText(symbol, ent->body.x - textW/2.0, ent->body.y - 12, 24, BLACK);
-                continue;
-            }
-
-            DrawCircle(ent->body.x, ent->body.y, ent->body.rad, (ent->status == STATUS_FROZEN)? SKYBLUE : RED);
-            symbol[0] = (char) ent->type;
-            DrawText(symbol, ent->body.x - 8, ent->body.y - 8, 16, ORANGE);
         }
-
     }
-
 }
 
 void DrawGUI(State *state)
