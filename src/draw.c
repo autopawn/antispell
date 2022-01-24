@@ -12,6 +12,7 @@ static const int TS = LEVEL_TILE_SIZE;
 
 static Texture2D wandTexture[2];
 static Texture2D mageTexture[2];
+static Texture2D bunnyTexture[2];
 
 void DrawLoadResources()
 {
@@ -19,6 +20,8 @@ void DrawLoadResources()
     wandTexture[1] = LoadTexture("resources/gui/wand1.png");
     mageTexture[0] = LoadTexture("resources/sprites/mage0.png");
     mageTexture[1] = LoadTexture("resources/sprites/mage1.png");
+    bunnyTexture[0] = LoadTexture("resources/sprites/bunny0.png");
+    bunnyTexture[1] = LoadTexture("resources/sprites/bunny1.png");
 }
 
 void DrawUnloadResources()
@@ -37,7 +40,7 @@ static Color GetStatusColor(EntityStatus status)
 
 static Color GetEntityColor(EntityType type)
 {
-    if (type == TYPE_PLAYER) return LIGHTGRAY;
+    if (type == TYPE_PLAYER) return WHITE;
     if (type == TYPE_MAGE_E) return GREEN;
     return WHITE;
 }
@@ -134,8 +137,10 @@ void DrawState(State *state, DrawLayer layer){
                     Color statusColor = GetStatusColor(ent->status);
                     Color entColor = isWhite(statusColor)? GetEntityColor(ent->type) : statusColor;
 
-                    DrawTexturePro(mageTexture[0], src, dst, origin, rotation, entColor);
-                    DrawTexturePro(mageTexture[1], src, dst, origin, rotation, statusColor);
+                    DrawTexturePro(ent->type == TYPE_PLAYER? bunnyTexture[0] : mageTexture[0],
+                            src, dst, origin, rotation, entColor);
+                    DrawTexturePro(ent->type == TYPE_PLAYER? bunnyTexture[1] : mageTexture[1],
+                            src, dst, origin, rotation, statusColor);
                     break;
                 }
                 default:
