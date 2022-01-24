@@ -15,7 +15,7 @@ static const float ENEMY_VISION_RANGE = 300;
 
 static const int TS = LEVEL_TILE_SIZE;
 
-static Entity *StateAddEntity(State *state, EntityType type, Body body)
+static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Body body)
 {
     // Extend vector capacity
     if (state->entsN == state->entsCapacity)
@@ -31,22 +31,10 @@ static Entity *StateAddEntity(State *state, EntityType type, Body body)
     ent->type = type;
     ent->body = body;
     ent->body.rad = (body.rad == 0)? 0.25*TS : body.rad;
+    ent->powerChar = powerChar;
 
     switch (ent->type)
     {
-        case TYPE_PLANT_I:
-        case TYPE_PLANT_C:
-        {
-            ent->powerChar = ent->type;
-            break;
-        }
-
-        case TYPE_MAGE_E:
-        {
-            ent->powerChar = ent->type;
-            break;
-        }
-
         default:
         {
             break;
@@ -75,8 +63,10 @@ State *StateLoadFromFile(const char *fname)
             char cell = state->level->cells[y][x];
             Body body = {(x + 0.5)*TS, (y + 0.5)*TS, 0, 0};
 
-            if (cell=='@' || ('A' <= cell && cell <= 'Z'))
-                StateAddEntity(state, cell, body);
+            if (cell=='@') StateAddEntity(state, TYPE_PLAYER, 0, body);
+            if (cell=='I') StateAddEntity(state, TYPE_FLOWER, 'I', body);
+            if (cell=='C') StateAddEntity(state, TYPE_CHOMP, 'C', body);
+            if (cell=='E') StateAddEntity(state, TYPE_MAGE, 'E', body);
         }
     }
 
@@ -180,7 +170,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 };
                 if (BodySetSpeed(&body, 4.0) == 1)
                 {
-                    Entity *attack = StateAddEntity(state, TYPE_SPELL, body);
+                    Entity *attack = StateAddEntity(state, TYPE_SPELL, 0, body);
                     attack->spell = spell;
 
                     state->wand.signal = WANDSIGNAL_SPELL;
@@ -195,7 +185,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 ent->attackCalled = 1;
         } break;
 
-        case TYPE_MAGE_E:
+        case TYPE_MAGE:
         {
             const Entity *player = StateGetPlayer(state);
             if (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE &&
@@ -214,8 +204,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         .vy = player->body.y - ent->body.y,
                     };
                     BodyLimitSpeed(&body, 2.0);
-                    Entity *bullet = StateAddEntity(state, TYPE_PROJECTILE, body);
-                    bullet->powerChar = ent->type;
+                    StateAddEntity(state, TYPE_PROJECTILE, ent->powerChar, body);
                 }
             }
         }

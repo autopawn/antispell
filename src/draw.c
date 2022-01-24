@@ -13,6 +13,7 @@ static const int TS = LEVEL_TILE_SIZE;
 static Texture2D wandTexture[2];
 static Texture2D mageTexture[2];
 static Texture2D bunnyTexture[2];
+static Texture2D flowerTexture[2];
 
 void DrawLoadResources()
 {
@@ -22,6 +23,8 @@ void DrawLoadResources()
     mageTexture[1] = LoadTexture("resources/sprites/mage1.png");
     bunnyTexture[0] = LoadTexture("resources/sprites/bunny0.png");
     bunnyTexture[1] = LoadTexture("resources/sprites/bunny1.png");
+    flowerTexture[0] = LoadTexture("resources/sprites/flower0.png");
+    flowerTexture[1] = LoadTexture("resources/sprites/flower1.png");
 }
 
 void DrawUnloadResources()
@@ -30,6 +33,10 @@ void DrawUnloadResources()
     UnloadTexture(wandTexture[1]);
     UnloadTexture(mageTexture[0]);
     UnloadTexture(mageTexture[1]);
+    UnloadTexture(bunnyTexture[0]);
+    UnloadTexture(bunnyTexture[1]);
+    UnloadTexture(flowerTexture[0]);
+    UnloadTexture(flowerTexture[1]);
 }
 
 static Color GetStatusColor(EntityStatus status)
@@ -38,10 +45,12 @@ static Color GetStatusColor(EntityStatus status)
     return WHITE;
 }
 
-static Color GetEntityColor(EntityType type)
+static Color GetPowerCharColor(char c)
 {
-    if (type == TYPE_PLAYER) return WHITE;
-    if (type == TYPE_MAGE_E) return GREEN;
+    if (c == 0) return WHITE;
+    if (c == 'I') return ORANGE;
+    if (c == 'C') return BLUE;
+    if (c == 'E') return GREEN;
     return WHITE;
 }
 
@@ -125,7 +134,8 @@ void DrawState(State *state, DrawLayer layer){
                     break;
                 }
                 case TYPE_PLAYER:
-                case TYPE_MAGE_E:
+                case TYPE_MAGE:
+                case TYPE_FLOWER:
                 {
                     float rotation = atan2((ent->lookY - ent->body.y), ent->lookX - ent->body.x);
                     rotation = (rotation/M_PI)*180;
@@ -135,18 +145,30 @@ void DrawState(State *state, DrawLayer layer){
                     Vector2 origin = {dst.width/2, dst.height/2};
 
                     Color statusColor = GetStatusColor(ent->status);
-                    Color entColor = isWhite(statusColor)? GetEntityColor(ent->type) : statusColor;
+                    Color entColor = isWhite(statusColor)? GetPowerCharColor(ent->powerChar) : statusColor;
 
-                    DrawTexturePro(ent->type == TYPE_PLAYER? bunnyTexture[0] : mageTexture[0],
-                            src, dst, origin, rotation, entColor);
-                    DrawTexturePro(ent->type == TYPE_PLAYER? bunnyTexture[1] : mageTexture[1],
-                            src, dst, origin, rotation, statusColor);
+                    Texture2D texture[2];
+                    texture[0] = flowerTexture[0];
+                    texture[1] = flowerTexture[1];
+                    if (ent->type == TYPE_PLAYER)
+                    {
+                        texture[0] = bunnyTexture[0];
+                        texture[1] = bunnyTexture[1];
+                    }
+                    if (ent->type == TYPE_MAGE)
+                    {
+                        texture[0] = mageTexture[0];
+                        texture[1] = mageTexture[1];
+                    }
+
+                    DrawTexturePro(texture[0], src, dst, origin, rotation, entColor);
+                    DrawTexturePro(texture[1], src, dst, origin, rotation, statusColor);
                     break;
                 }
                 default:
                 {
                     DrawCircle(ent->body.x, ent->body.y, ent->body.rad, (ent->status == STATUS_FROZEN)? SKYBLUE : RED);
-                    symbol[0] = (char) ent->type;
+                    symbol[0] = (char) ent->powerChar;
                     DrawText(symbol, ent->body.x - 8, ent->body.y - 8, 16, ORANGE);
                 }
             }

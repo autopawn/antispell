@@ -8,10 +8,10 @@
 #define MAX_SPELL_LENGHT 5
 
 typedef enum {
-    TYPE_PLAYER = '@',
-    TYPE_PLANT_I = 'I',
-    TYPE_PLANT_C = 'C',
-    TYPE_MAGE_E = 'E',
+    TYPE_PLAYER,
+    TYPE_FLOWER,
+    TYPE_CHOMP,
+    TYPE_MAGE,
     TYPE_PROJECTILE,
     TYPE_SPELL,
 } EntityType;
