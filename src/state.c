@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "spell_catalog.h"
 
@@ -116,25 +117,75 @@ Entity *StateGetPlayer(const State *state){
     return ent;
 }
 
+static Particle *AddParticle(Particle *parts, int *partsN, int partsMax, Particle particle)
+{
+    if ((*partsN) == partsMax)
+    {
+        int idx = rand()%partsMax;
+        parts[idx] = particle;
+        return &parts[idx];
+    }
+    else
+    {
+        parts[*partsN] = particle;
+        *partsN += 1;
+        return &parts[(*partsN) - 1];
+    }
+}
+
+static void UpdateParticleList(Particle *parts, int *partsN)
+{
+    int particlesN2 = 0;
+    for (int k = 0; k < *partsN; k++)
+    {
+        if (parts[k].lifeTime > 0)
+        {
+            parts[k].lifeTime--;
+            UpdateBody(NULL, &parts[k].body);
+            parts[particlesN2++] = parts[k];
+        }
+    }
+    *partsN = particlesN2;
+}
+
 static void StateUpdateEntity(State *state, Entity *ent, int colliding, int process_pressed_keys)
 {
-    // Status control
-    if (ent->status == STATUS_FROZEN && ent->statusTime >= 800)
+    // Emit powerChar particles
+    const float PARTICLE_SPD = 0.4;
+    const int PARTICLE_FREQ = 16;
+    if ((ent->powerChar != 0) && (ent->timeAlive%PARTICLE_FREQ == 0))
     {
-        ent->status = STATUS_NORMAL;
-        ent->statusTime = 0;
+        Particle part;
+        float angle = 0.5*M_PI + ((137.508/360)*2*M_PI)*(ent->timeAlive/PARTICLE_FREQ);  // Golden angle
+        part.body = (Body){
+            .x = 0, .y = 0,
+            .vx = PARTICLE_SPD*cos(angle), .vy = PARTICLE_SPD*sin(angle),
+            .rad = 4};
+        part.lifeTime = 80;
+        part.powerChar = ent->powerChar;
+        AddParticle(ent->particles, &ent->particlesN, MAX_ENTITY_PARTICLES, part);
     }
-    ent->statusTime++;
 
-    if (ent->status == STATUS_FROZEN)
-    {
-        ent->body.vx = 0;
-        ent->body.vy = 0;
-        return;
-    }
-
-    // Cooldown update
+    // Timers
+    ent->timeAlive++;
     ent->cooldown--;
+
+    { // Status control
+        if (ent->status == STATUS_FROZEN && ent->statusTime >= 800)
+        {
+            ent->status = STATUS_NORMAL;
+            ent->statusTime = 0;
+        }
+        ent->statusTime++;
+
+        if (ent->status == STATUS_FROZEN)
+        {
+            ent->body.vx = 0;
+            ent->body.vy = 0;
+            return;
+        }
+    }
+
 
     // Current cell
     int cellX = ent->body.x/TS;
@@ -296,14 +347,31 @@ void StateUpdate(State *state, int process_pressed_keys)
     int entsN2 = 0;
     for(int i = 0; i < state->entsN; i++)
     {
-        if (!state->ents[i].terminate)
+        Entity *ent = &state->ents[i];
+        if (ent->terminate)
         {
-            state->ents[entsN2] = state->ents[i];
+            // Move entity particles to the state
+            for(int k = 0; k < ent->particlesN; k++)
+            {
+                Particle particle = ent->particles[k];
+                particle.body.x += ent->body.x;
+                particle.body.y += ent->body.y;
+                AddParticle(state->particles, &state->particlesN, MAX_STATE_PARTICLES, particle);
+            }
+        }
+        else
+        {
+            state->ents[entsN2] = *ent;
             entsN2++;
         }
     }
     state->entsN = entsN2;
 
+    { // Update particles
+        UpdateParticleList(state->particles, &state->particlesN);
+        for(int i = 0; i < state->entsN; i++)
+            UpdateParticleList(state->ents[i].particles, &state->ents[i].particlesN);
+    }
 
     { // Wand update
         state->wand.signalIntensity *= 0.96;

@@ -7,6 +7,9 @@
 
 #define MAX_SPELL_LENGHT 5
 
+#define MAX_ENTITY_PARTICLES 8
+#define MAX_STATE_PARTICLES 400
+
 typedef enum {
     TYPE_PLAYER,
     TYPE_FLOWER,
@@ -23,6 +26,12 @@ typedef enum {
 
 typedef struct {
     Body body;
+    int lifeTime;
+    char powerChar;
+} Particle;
+
+typedef struct {
+    Body body;
     EntityType type;
     int terminate;
     // Char that can be absorved by the wand
@@ -35,9 +44,13 @@ typedef struct {
     EntityStatus status;
     int statusTime;
     Body initialBody;
+    int timeAlive;
 
     int attackCalled;
     int cooldown;
+
+    Particle particles[MAX_ENTITY_PARTICLES];
+    int particlesN;
 } Entity;
 
 typedef enum
@@ -66,6 +79,9 @@ typedef struct {
         WandSignal signal;
         float signalIntensity;
     } wand;
+
+    Particle particles[MAX_STATE_PARTICLES];
+    int particlesN;
 } State;
 
 

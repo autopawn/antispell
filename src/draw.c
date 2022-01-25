@@ -61,6 +61,19 @@ static Color GetPowerCharColor(char c)
     return WHITE;
 }
 
+void DrawParticle(Particle particle)
+{
+    char symbol[2];
+    symbol[0] = particle.powerChar;
+    symbol[1] = '\0';
+    int fontSize = 2*particle.body.rad;
+    int measX = MeasureText(symbol, fontSize);
+    Color color = GetPowerCharColor(particle.powerChar);
+    if (particle.lifeTime % 15 < 4) color = WHITE;
+
+    DrawText(symbol, particle.body.x - measX/2.0, particle.body.y - fontSize/2.0, fontSize, color);
+}
+
 static void DrawLevel(Level *level, DrawLayer layer)
 {
     for (int y = 0; y < level->sizeY; y++)
@@ -203,6 +216,23 @@ void DrawState(State *state, DrawLayer layer){
                     symbol[0] = (char) ent->powerChar;
                     DrawText(symbol, ent->body.x - 8, ent->body.y - 8, 16, ORANGE);
                 }
+            }
+        }
+    }
+
+    if (layer == LAYER2_ENTS)
+    {
+            // Draw particles
+        for (int k = 0; k < state->particlesN; k++)
+            DrawParticle(state->particles[k]);
+        for (int i = 0; i < state->entsN; i++)
+        {
+            for (int k = 0; k < state->ents[i].particlesN; k++)
+            {
+                Particle part = state->ents[i].particles[k];
+                part.body.x += state->ents[i].body.x;
+                part.body.y += state->ents[i].body.y;
+                DrawParticle(part);
             }
         }
     }

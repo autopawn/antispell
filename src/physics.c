@@ -97,6 +97,12 @@ static int moveBody(const Level *level, Body *body, float remX, float remY)
 
 int UpdateBody(const Level *level, Body *body)
 {
+    if (!level)
+    {
+        body->x += body->vx;
+        body->y += body->vy;
+        return 0;
+    }
     return moveBody(level, body, body->vx, body->vy);
 }
 
