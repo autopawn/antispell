@@ -151,21 +151,42 @@ static void UpdateParticleList(Particle *parts, int *partsN)
 static void StateUpdateEntity(State *state, Entity *ent, int colliding, int process_pressed_keys)
 {
     // Emit powerChar particles
-    const float PARTICLE_SPD = 0.4;
-    const int PARTICLE_FREQ = 16;
-    if ((ent->powerChar != 0) && (ent->timeAlive%PARTICLE_FREQ == 0))
+    if (ent->type == TYPE_SPELL)
     {
-        Particle part;
-        float angle = 0.5*M_PI + ((137.508/360)*2*M_PI)*(ent->timeAlive/PARTICLE_FREQ);  // Golden angle
-        part.body = (Body){
-            .x = 0, .y = 0,
-            .vx = PARTICLE_SPD*cos(angle), .vy = PARTICLE_SPD*sin(angle),
-            .rad = 4};
-        part.lifeTime = 80;
-        part.powerChar = ent->powerChar;
-        AddParticle(ent->particles, &ent->particlesN, MAX_ENTITY_PARTICLES, part);
-    }
+        const int PARTICLE_FREQ = 4;
 
+        if (ent->timeAlive%PARTICLE_FREQ == 0)
+        {
+            int p = (ent->timeAlive/PARTICLE_FREQ)%(strlen(ent->spell.name) + 1);
+            if (p < strlen(ent->spell.name))
+            {
+                Particle part = {0};
+                part.body.x = ent->body.x;
+                part.body.y = ent->body.y;
+                part.body.rad = 4;
+                part.lifeTime = 40;
+                part.character = ent->spell.name[p];
+                part.color = ent->spell.color;
+                AddParticle(state->particles, &state->particlesN, MAX_STATE_PARTICLES, part);
+            }
+        }
+    } else {
+        const float PARTICLE_SPD = 0.4;
+        const int PARTICLE_FREQ = 16;
+
+        if (ent->timeAlive%PARTICLE_FREQ == 0 && ent->powerChar != 0)
+        {
+            float angle = 0.5*M_PI + ((137.508/360)*2*M_PI)*(ent->timeAlive/PARTICLE_FREQ);  // Golden angle
+            Particle part = {0};
+            part.body.vx = PARTICLE_SPD*cos(angle);
+            part.body.vy = PARTICLE_SPD*sin(angle);
+            part.body.rad = 4;
+            part.lifeTime = 80;
+            part.character = ent->powerChar;
+            part.color = GetPowerCharColor(ent->powerChar);
+            AddParticle(ent->particles, &ent->particlesN, MAX_ENTITY_PARTICLES, part);
+        }
+    }
     // Timers
     ent->timeAlive++;
     ent->cooldown--;

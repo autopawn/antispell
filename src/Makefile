@@ -382,6 +382,7 @@ PROJECT_SOURCE_FILES ?= \
     level.c \
     state.c \
     draw.c \
+    spell_catalog.c \
     physics.c
 
 # Define all object files from source files

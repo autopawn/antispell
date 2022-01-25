@@ -52,23 +52,14 @@ static Color GetStatusColor(EntityStatus status)
     return WHITE;
 }
 
-static Color GetPowerCharColor(char c)
-{
-    if (c == 0) return WHITE;
-    if (c == 'I') return ORANGE;
-    if (c == 'C') return BLUE;
-    if (c == 'E') return GREEN;
-    return WHITE;
-}
-
 void DrawParticle(Particle particle)
 {
     char symbol[2];
-    symbol[0] = particle.powerChar;
+    symbol[0] = particle.character;
     symbol[1] = '\0';
     int fontSize = 2*particle.body.rad;
     int measX = MeasureText(symbol, fontSize);
-    Color color = GetPowerCharColor(particle.powerChar);
+    Color color = particle.color;
     if (particle.lifeTime % 15 < 4) color = WHITE;
 
     DrawText(symbol, particle.body.x - measX/2.0, particle.body.y - fontSize/2.0, fontSize, color);
@@ -166,8 +157,7 @@ void DrawState(State *state, DrawLayer layer){
                 }
                 case TYPE_SPELL:
                 {
-                    Color spellColor = (Color){
-                            ent->spell.color.r, ent->spell.color.g, ent->spell.color.b, ent->spell.color.a};
+                    Color spellColor = ent->spell.color;
                     DrawCircle(ent->body.x, ent->body.y, ent->body.rad, spellColor);
 
                     int spelli = (ent->statusTime/24)%(1+strlen(ent->spell.name));
@@ -243,8 +233,7 @@ void DrawGUI(State *state)
     float wandX = (GetScreenWidth() - wandTexture[0].width)/2.0;
 
     Spell spell = GetSpell(state->wand.spell);
-    Color spellColor = (Color){
-            .r = spell.color.r, .g = spell.color.g, .b = spell.color.b, .a = spell.color.a};
+    Color spellColor = spell.color;
 
     int spellValid = spell.type != SPELLTYPE_NONE;
 

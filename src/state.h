@@ -27,7 +27,8 @@ typedef enum {
 typedef struct {
     Body body;
     int lifeTime;
-    char powerChar;
+    char character;
+    Color color;
 } Particle;
 
 typedef struct {
