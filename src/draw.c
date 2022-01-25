@@ -15,6 +15,7 @@ static Texture2D mageTexture[2];
 static Texture2D bunnyTexture[2];
 static Texture2D flowerTexture[2];
 static Texture2D chompTexture[3];
+static Texture2D spellTexture;
 
 void DrawLoadResources()
 {
@@ -29,6 +30,7 @@ void DrawLoadResources()
     chompTexture[0] = LoadTexture("resources/sprites/chomp0.png");
     chompTexture[1] = LoadTexture("resources/sprites/chomp1.png");
     chompTexture[2] = LoadTexture("resources/sprites/base.png");
+    spellTexture = LoadTexture("resources/sprites/spell.png");
 }
 
 void DrawUnloadResources()
@@ -44,6 +46,7 @@ void DrawUnloadResources()
     UnloadTexture(chompTexture[0]);
     UnloadTexture(chompTexture[1]);
     UnloadTexture(chompTexture[2]);
+    UnloadTexture(spellTexture);
 }
 
 static Color GetStatusColor(EntityStatus status)
@@ -157,13 +160,10 @@ void DrawState(State *state, DrawLayer layer){
                 }
                 case TYPE_SPELL:
                 {
-                    Color spellColor = ent->spell.color;
-                    DrawCircle(ent->body.x, ent->body.y, ent->body.rad, spellColor);
-
-                    int spelli = (ent->statusTime/24)%(1+strlen(ent->spell.name));
-                    symbol[0] = (char) ent->spell.name[spelli];
-                    int textW = MeasureText(symbol, 24);
-                    DrawText(symbol, ent->body.x - textW/2.0, ent->body.y - 12, 24, BLACK);
+                    Rectangle src = {0, 0, spellTexture.width, spellTexture.height};
+                    Rectangle dst = {ent->body.x, ent->body.y, 2*ent->body.rad, 2*ent->body.rad};
+                    Vector2 origin = {dst.width/2, dst.height/2};
+                    DrawTexturePro(spellTexture, src, dst, origin, 0, ent->spell.color);
                     break;
                 }
                 case TYPE_PLAYER:
@@ -172,13 +172,6 @@ void DrawState(State *state, DrawLayer layer){
                 {
                     float rotation = atan2((ent->lookY - ent->body.y), ent->lookX - ent->body.x);
                     rotation = (rotation/M_PI)*180;
-
-                    Rectangle src = {0, 0, mageTexture[0].width, mageTexture[0].height};
-                    Rectangle dst = {ent->body.x, ent->body.y, 3*ent->body.rad, 3*ent->body.rad};
-                    Vector2 origin = {dst.width/2, dst.height/2};
-
-                    Color statusColor = GetStatusColor(ent->status);
-                    Color entColor = isWhite(statusColor)? GetPowerCharColor(ent->powerChar) : statusColor;
 
                     Texture2D texture[2];
                     texture[0] = flowerTexture[0];
@@ -193,6 +186,14 @@ void DrawState(State *state, DrawLayer layer){
                         texture[0] = mageTexture[0];
                         texture[1] = mageTexture[1];
                     }
+
+                    Rectangle src = {0, 0, texture[0].width, texture[0].height};
+                    Rectangle dst = {ent->body.x, ent->body.y, 3*ent->body.rad, 3*ent->body.rad};
+                    Vector2 origin = {dst.width/2, dst.height/2};
+
+                    Color statusColor = GetStatusColor(ent->status);
+                    Color entColor = isWhite(statusColor)? GetPowerCharColor(ent->powerChar) : statusColor;
+
                     DrawTexturePro(texture[0], src, dst, origin, rotation, entColor);
                     DrawTexturePro(texture[1], src, dst, origin, rotation, statusColor);
                     break;
@@ -242,11 +243,16 @@ void DrawGUI(State *state)
 
     Color color = spellValid? spellColor : DARKGRAY;
     Color signalColor = DARKGRAY;
-    if (state->wand.signal == WANDSIGNAL_BACKSPACE) signalColor = RED;
-    if (state->wand.signal == WANDSIGNAL_ABSORB) signalColor = SKYBLUE;
-    if (state->wand.signal == WANDSIGNAL_ABSORBED) signalColor = YELLOW;
-    if (state->wand.signal == WANDSIGNAL_FULL) signalColor = DARKBLUE;
-    if (state->wand.signal == WANDSIGNAL_SPELL) signalColor = WHITE;
+    if (state->wand.signal == WANDSIGNAL_BACKSPACE)
+        signalColor = RED;
+    if (state->wand.signal == WANDSIGNAL_ABSORB)
+        signalColor = GetPowerCharColor(state->wand.absorbingChar);
+    if (state->wand.signal == WANDSIGNAL_ABSORBED)
+        signalColor = YELLOW;
+    if (state->wand.signal == WANDSIGNAL_FULL)
+        signalColor = DARKBLUE;
+    if (state->wand.signal == WANDSIGNAL_SPELL)
+        signalColor = WHITE;
     float si = state->wand.signalIntensity;
     color.r = (unsigned char)(signalColor.r*si + color.r*(1.0 - si));
     color.g = (unsigned char)(signalColor.g*si + color.g*(1.0 - si));
