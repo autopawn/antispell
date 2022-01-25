@@ -14,6 +14,7 @@ static Texture2D wandTexture[2];
 static Texture2D mageTexture[2];
 static Texture2D bunnyTexture[2];
 static Texture2D flowerTexture[2];
+static Texture2D chompTexture[3];
 
 void DrawLoadResources()
 {
@@ -25,6 +26,9 @@ void DrawLoadResources()
     bunnyTexture[1] = LoadTexture("resources/sprites/bunny1.png");
     flowerTexture[0] = LoadTexture("resources/sprites/flower0.png");
     flowerTexture[1] = LoadTexture("resources/sprites/flower1.png");
+    chompTexture[0] = LoadTexture("resources/sprites/chomp0.png");
+    chompTexture[1] = LoadTexture("resources/sprites/chomp1.png");
+    chompTexture[2] = LoadTexture("resources/sprites/base.png");
 }
 
 void DrawUnloadResources()
@@ -37,6 +41,9 @@ void DrawUnloadResources()
     UnloadTexture(bunnyTexture[1]);
     UnloadTexture(flowerTexture[0]);
     UnloadTexture(flowerTexture[1]);
+    UnloadTexture(chompTexture[0]);
+    UnloadTexture(chompTexture[1]);
+    UnloadTexture(chompTexture[2]);
 }
 
 static Color GetStatusColor(EntityStatus status)
@@ -105,6 +112,12 @@ void DrawState(State *state, DrawLayer layer){
         if (layer == LAYER0_RUG)
         {
             DrawCircle(ent->body.x, ent->body.y, ent->body.rad, (Color){0, 0, 0, 128});
+            if (ent->type == TYPE_CHOMP)
+            {
+                DrawLineEx((Vector2){ent->initialBody.x, ent->initialBody.y},
+                        (Vector2){ent->body.x, ent->body.y}, 5, (Color){0, 0, 0, 128});
+                DrawCircle(ent->initialBody.x, ent->initialBody.y, ent->initialBody.rad, (Color){0, 0, 0, 128});
+            }
         }
         if (layer == LAYER2_ENTS)
         {
@@ -160,9 +173,28 @@ void DrawState(State *state, DrawLayer layer){
                         texture[0] = mageTexture[0];
                         texture[1] = mageTexture[1];
                     }
-
                     DrawTexturePro(texture[0], src, dst, origin, rotation, entColor);
                     DrawTexturePro(texture[1], src, dst, origin, rotation, statusColor);
+                    break;
+                }
+                case TYPE_CHOMP:
+                {
+                    float rotation = atan2((ent->lookY - ent->body.y), ent->lookX - ent->body.x);
+                    rotation = (rotation/M_PI)*180;
+
+                    Rectangle src = {0, 0, mageTexture[0].width, mageTexture[0].height};
+                    Rectangle dst1 = {ent->initialBody.x, ent->initialBody.y, 3*ent->body.rad, 3*ent->body.rad};
+                    Rectangle dst2 = {ent->body.x, ent->body.y, 3*ent->body.rad, 3*ent->body.rad};
+                    Vector2 origin = {dst1.width/2, dst1.height/2};
+
+                    Color statusColor = GetStatusColor(ent->status);
+                    Color entColor = isWhite(statusColor)? GetPowerCharColor(ent->powerChar) : statusColor;
+
+                    DrawTexturePro(chompTexture[2], src, dst1, origin, 0, WHITE);
+                    DrawLineEx((Vector2){ent->initialBody.x, ent->initialBody.y},
+                        (Vector2){ent->body.x, ent->body.y}, 5, entColor);
+                    DrawTexturePro(chompTexture[0], src, dst2, origin, rotation, entColor);
+                    DrawTexturePro(chompTexture[1], src, dst2, origin, rotation, statusColor);
                     break;
                 }
                 default:

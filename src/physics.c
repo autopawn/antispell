@@ -100,13 +100,31 @@ int UpdateBody(const Level *level, Body *body)
     return moveBody(level, body, body->vx, body->vy);
 }
 
-void BodyLimitSpeed(Body *body, float mag){
-    float cmag = sqrtf( body->vx*body->vx + body->vy*body->vy);
+// Limits the vector to a given magnitude
+void LimitVector(float *x, float *y, float mag)
+{
+    float cmag = sqrtf( (*x)*(*x) + (*y)*(*y));
     if (cmag > mag)
     {
-        body->vx *= mag / cmag;
-        body->vy *= mag / cmag;
+        *x *= mag / cmag;
+        *y *= mag / cmag;
     }
+}
+
+void BodyLimitSpeed(Body *body, float mag){
+    LimitVector(&body->vx, &body->vy, mag);
+}
+
+void BodyAccelTowards(Body *body, float tgtX, float tgtY, float accel, float maxSpeed)
+{
+    float dx = tgtX - body->x;
+    float dy = tgtY - body->y;
+    float dmag = sqrtf( dx*dx + dy*dy );
+    if (dmag == 0) return;
+    body->vx += accel*dx/dmag;
+    body->vy += accel*dy/dmag;
+
+    BodyLimitSpeed(body, maxSpeed);
 }
 
 int BodySetSpeed(Body *body, float mag){

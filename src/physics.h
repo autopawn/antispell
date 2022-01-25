@@ -8,8 +8,14 @@ typedef struct {
     float rad;
 } Body;
 
+// Limits the vector to a given magnitude
+void LimitVector(float *x, float *y, float mag);
+
 // Limits the body speed to the given magnitude
 void BodyLimitSpeed(Body *body, float mag);
+
+// Move towards a given position
+void BodyAccelTowards(Body *body, float tgtX, float tgtY, float accel, float maxSpeed);
 
 // Makes the body speed have the given magnitude, preserving the angle.
 // Retrieves 0 ff current speed is 0.

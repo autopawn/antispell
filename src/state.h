@@ -34,6 +34,7 @@ typedef struct {
 
     EntityStatus status;
     int statusTime;
+    Body initialBody;
 
     int attackCalled;
     int cooldown;

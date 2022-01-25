@@ -29,6 +29,7 @@ static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Bod
     state->entsN++;
     memset(ent, 0, sizeof(Entity));
     ent->type = type;
+    ent->initialBody = body;
     ent->body = body;
     ent->body.rad = (body.rad == 0)? 0.25*TS : body.rad;
     ent->powerChar = powerChar;
@@ -114,7 +115,12 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
     }
     ent->statusTime++;
 
-    if (ent->status == STATUS_FROZEN) return;
+    if (ent->status == STATUS_FROZEN)
+    {
+        ent->body.vx = 0;
+        ent->body.vy = 0;
+        return;
+    }
 
     // Cooldown update
     ent->cooldown--;
@@ -183,7 +189,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
 
             if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 ent->attackCalled = 1;
-        } break;
+            break;
+        }
 
         case TYPE_MAGE:
         {
@@ -207,6 +214,25 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                     StateAddEntity(state, TYPE_PROJECTILE, ent->powerChar, body);
                 }
             }
+            break;
+        }
+
+        case TYPE_CHOMP:
+        {
+            const Entity *player = StateGetPlayer(state);
+            if (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE &&
+                        LineOfSight(state->level, ent->body, player->body))
+            {
+                ent->lookX = player->body.x;
+                ent->lookY = player->body.y;
+                BodyAccelTowards(&ent->body, ent->lookX, ent->lookY, 0.1, 4);
+            }
+            float deltaXini = ent->body.x - ent->initialBody.x;
+            float deltaYini = ent->body.y - ent->initialBody.y;
+            LimitVector(&deltaXini, &deltaYini, 60);
+            ent->body.x = ent->initialBody.x + deltaXini;
+            ent->body.y = ent->initialBody.y + deltaYini;
+            break;
         }
 
         case TYPE_PROJECTILE:
@@ -242,6 +268,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                     ent->terminate = 1;
                 }
             }
+            break;
         }
 
         default:
