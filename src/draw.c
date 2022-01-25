@@ -118,6 +118,23 @@ void DrawState(State *state, DrawLayer layer){
     // Draw level
     DrawLevel(state->level, layer);
 
+    if (layer == LAYER2_ENTS)
+    {
+        // Draw particles
+        for (int k = 0; k < state->particlesN; k++)
+            DrawParticle(state->particles[k]);
+        for (int i = 0; i < state->entsN; i++)
+        {
+            for (int k = 0; k < state->ents[i].particlesN; k++)
+            {
+                Particle part = state->ents[i].particles[k];
+                part.body.x += state->ents[i].body.x;
+                part.body.y += state->ents[i].body.y;
+                DrawParticle(part);
+            }
+        }
+    }
+
     // Draw ents
     for (int i = 0; i < state->entsN; i++)
     {
@@ -141,10 +158,10 @@ void DrawState(State *state, DrawLayer layer){
             {
                 case TYPE_PROJECTILE:
                 {
-                    DrawCircle(ent->body.x, ent->body.y, ent->body.rad, YELLOW);
-                    symbol[0] = (char) ent->powerChar;
-                    int textW = MeasureText(symbol, 24);
-                    DrawText(symbol, ent->body.x - textW/2.0, ent->body.y - 12, 24, ORANGE);
+                    Color col1 = GetPowerCharColor(ent->powerChar);
+                    Color col2 = col1;
+                    col2.a = 64;
+                    DrawCircleGradient(ent->body.x, ent->body.y, ent->body.rad, col1, col2);
                     break;
                 }
                 case TYPE_SPELL:
@@ -216,23 +233,6 @@ void DrawState(State *state, DrawLayer layer){
                     symbol[0] = (char) ent->powerChar;
                     DrawText(symbol, ent->body.x - 8, ent->body.y - 8, 16, ORANGE);
                 }
-            }
-        }
-    }
-
-    if (layer == LAYER2_ENTS)
-    {
-            // Draw particles
-        for (int k = 0; k < state->particlesN; k++)
-            DrawParticle(state->particles[k]);
-        for (int i = 0; i < state->entsN; i++)
-        {
-            for (int k = 0; k < state->ents[i].particlesN; k++)
-            {
-                Particle part = state->ents[i].particles[k];
-                part.body.x += state->ents[i].body.x;
-                part.body.y += state->ents[i].body.y;
-                DrawParticle(part);
             }
         }
     }
