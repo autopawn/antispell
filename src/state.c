@@ -10,7 +10,7 @@
 #include "spell_catalog.h"
 
 static const float WAND_RADIOUS = 30;
-static const int WAND_ABSORV_TIME = 30;
+static const int WAND_ABSORV_TIME = 25;
 
 static const float ENEMY_VISION_RANGE = 300;
 

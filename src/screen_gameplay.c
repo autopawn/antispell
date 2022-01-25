@@ -55,7 +55,7 @@ static Sound timeSpeedSfx[2];
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
 {
-    state = StateLoadFromFile("resources/levels/00.txt");
+    state = StateLoadFromFile("resources/levels/01.txt");
     LevelPrint(state->level);
 
     floorTexture = LoadTexture("resources/fabric61.png");
