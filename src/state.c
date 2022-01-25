@@ -15,6 +15,17 @@ static const float ENEMY_VISION_RANGE = 300;
 
 static const int TS = LEVEL_TILE_SIZE;
 
+static Sound wandBellSfx;
+
+void StateLoadResources(){
+    wandBellSfx = LoadSound("resources/sfx/wand_bell.wav");
+}
+
+void StateUnloadResources()
+{
+    UnloadSound(wandBellSfx);
+}
+
 static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Body body)
 {
     // Extend vector capacity
@@ -307,6 +318,8 @@ void StateUpdate(State *state, int process_pressed_keys)
             state->wand.signal = WANDSIGNAL_ABSORBED;
             state->wand.signalIntensity = 1.0;
             spellLen++;
+            Spell spell = GetSpell(state->wand.spell);
+            if (spell.type != SPELLTYPE_NONE) PlaySoundMulti(wandBellSfx);
         }
 
         Entity *player = StateGetPlayer(state);

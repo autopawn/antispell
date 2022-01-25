@@ -60,6 +60,7 @@ void InitGameplayScreen(void)
 
     floorTexture = LoadTexture("resources/fabric61.png");
     DrawLoadResources();
+    StateLoadResources();
 
     timeSpeedSfx[0] = LoadSound("resources/sfx/time_slowdown.wav");
     timeSpeedSfx[1] = LoadSound("resources/sfx/time_speedup.wav");
@@ -157,6 +158,7 @@ void UnloadGameplayScreen(void)
     UnloadSound(timeSpeedSfx[0]);
     UnloadSound(timeSpeedSfx[1]);
     DrawUnloadResources();
+    StateUnloadResources();
     StateFree(state);
 }
 

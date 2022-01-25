@@ -69,6 +69,10 @@ typedef struct {
 } State;
 
 
+void StateLoadResources();
+
+void StateUnloadResources();
+
 State *StateLoadFromFile(const char *fname);
 
 State *StateCopy(const State *state);
