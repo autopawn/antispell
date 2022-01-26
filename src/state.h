@@ -82,11 +82,12 @@ typedef struct {
 
     struct {
         // Words forming in the wand
-        char spell[MAX_SPELL_LENGHT + 1];
+        char text[MAX_SPELL_LENGHT + 1];
         char absorbingChar;
         int absorbingTime;
         WandSignal signal;
         float signalIntensity;
+        Spell spell;
     } wand;
 
     Particle particles[MAX_STATE_PARTICLES];

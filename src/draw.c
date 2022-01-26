@@ -336,13 +336,13 @@ void DrawGUI(State *state)
 
     float wandX = (GetScreenWidth() - wandTexture[0].width)/2.0;
 
-    Spell spell = GetSpell(state->wand.spell);
+    Spell spell = state->wand.spell;
     Color spellColor = spell.color;
 
     int spellValid = spell.type != SPELLTYPE_NONE;
 
     char symbol[2];
-    int spellLength = strlen(state->wand.spell);
+    int spellLength = strlen(state->wand.text);
 
     Color color = spellValid? spellColor : DARKGRAY;
     Color signalColor = DARKGRAY;
@@ -353,7 +353,7 @@ void DrawGUI(State *state)
     if (state->wand.signal == WANDSIGNAL_ABSORBED)
         signalColor = YELLOW;
     if (state->wand.signal == WANDSIGNAL_FULL)
-        signalColor = DARKBLUE;
+        signalColor = DARKGRAY;
     if (state->wand.signal == WANDSIGNAL_SPELL)
         signalColor = WHITE;
     float si = state->wand.signalIntensity;
@@ -366,7 +366,7 @@ void DrawGUI(State *state)
 
     for (int i = 0; i < MAX_SPELL_LENGHT; i++)
     {
-        symbol[0] = (i < spellLength)? state->wand.spell[i] : '-';
+        symbol[0] = (i < spellLength)? state->wand.text[i] : '-';
         symbol[1] = '\0';
         float symbX = wandX + (i+1)*wandTexture[0].width/(MAX_SPELL_LENGHT + 2.5);
         DrawText(symbol, symbX-2, 12, 32, BLACK);

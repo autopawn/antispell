@@ -90,8 +90,9 @@ State *StateLoadFromFile(const char *fname)
     }
 
     #ifdef SPELL
-        strcpy(state->wand.spell, SPELL);
+        strcpy(state->wand.text, SPELL);
     #endif
+    state->wand.spell = GetSpell(state->wand.text);
 
     return state;
 }
@@ -281,15 +282,15 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             ent->lookX = ent->body.x + lookDeltaX/2.0;
             ent->lookY = ent->body.y + lookDeltaY/2.0;
 
-            if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && state->wand.spell[0] != '\0')
+            if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && state->wand.text[0] != '\0')
             {
-                state->wand.spell[strlen(state->wand.spell) - 1] = '\0';
+                state->wand.text[strlen(state->wand.text) - 1] = '\0';
+                state->wand.spell = GetSpell(state->wand.text);
                 state->wand.signal = WANDSIGNAL_BACKSPACE;
                 state->wand.signalIntensity = 1.0;
             }
             // Attack update
-            Spell spell = GetSpell(state->wand.spell);
-            int spellValid = spell.type != SPELLTYPE_NONE;
+            int spellValid = state->wand.spell.type != SPELLTYPE_NONE;
             if (!spellValid)
                 ent->attackCalled = 0;
 
@@ -306,7 +307,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 if (BodySetSpeed(&body, 4.0) == 1)
                 {
                     Entity *attack = StateAddEntity(state, TYPE_SPELL, 0, body);
-                    attack->spell = spell;
+                    attack->spell = state->wand.spell;
 
                     state->wand.signal = WANDSIGNAL_SPELL;
                     state->wand.signalIntensity = 1.0;
@@ -542,18 +543,18 @@ void StateUpdate(State *state, int process_pressed_keys)
     { // Wand update
         state->wand.signalIntensity *= 0.96;
 
-        int spellLen = strlen(state->wand.spell);
+        int spellLen = strlen(state->wand.text);
         if (state->wand.absorbingTime >= WAND_ABSORV_TIME && spellLen < MAX_SPELL_LENGHT)
         {
-            state->wand.spell[spellLen] = state->wand.absorbingChar;
-            state->wand.spell[spellLen + 1] = '\0';
+            state->wand.text[spellLen] = state->wand.absorbingChar;
+            state->wand.text[spellLen + 1] = '\0';
+            state->wand.spell = GetSpell(state->wand.text);
             state->wand.absorbingChar = 0;
             state->wand.absorbingTime = 0;
             state->wand.signal = WANDSIGNAL_ABSORBED;
             state->wand.signalIntensity = 1.0;
             spellLen++;
-            Spell spell = GetSpell(state->wand.spell);
-            if (spell.type != SPELLTYPE_NONE) PlaySoundMulti(wandBellSfx);
+            if (state->wand.spell.type != SPELLTYPE_NONE) PlaySoundMulti(wandBellSfx);
         }
 
         Entity *player = StateGetPlayer(state);
@@ -577,7 +578,7 @@ void StateUpdate(State *state, int process_pressed_keys)
         if (absorving)
         {
             state->wand.absorbingTime++;
-            if (spellLen == MAX_SPELL_LENGHT)
+            if (spellLen == MAX_SPELL_LENGHT || state->wand.spell.type != SPELLTYPE_NONE)
             {
                 state->wand.absorbingTime = 1;
                 if (state->wand.signalIntensity < 0.5 || state->wand.signal == WANDSIGNAL_FULL)
