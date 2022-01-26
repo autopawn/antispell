@@ -149,11 +149,12 @@ static void AddExplosion(Entity *ent, int nParticles, Color col, char character)
         nParticles = MAX_ENTITY_PARTICLES;
     for (int i = 0; i < nParticles; i++)
     {
+        const float MAX_PARTICLE_SPD = 1.0;
         Particle part = {0};
-        part.body.x = ((rand()%101 - 50)/100.0)*ent->body.rad;
-        part.body.y = ((rand()%101 - 50)/100.0)*ent->body.rad;
-        part.body.vx = (rand()%101 - 50)/50.0;
-        part.body.vy = (rand()%101 - 50)/50.0;
+        part.body.vx = (rand()%101 - 50)/50.0 * MAX_PARTICLE_SPD;
+        part.body.vy = (rand()%101 - 50)/50.0 * MAX_PARTICLE_SPD;
+        part.body.x = part.body.vx*0.7*ent->body.rad/MAX_PARTICLE_SPD;
+        part.body.y = part.body.vy*0.7*ent->body.rad/MAX_PARTICLE_SPD;
         part.body.rad = 9;
         part.character = character;
         part.color = col;

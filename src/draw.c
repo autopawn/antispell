@@ -18,6 +18,7 @@ static Texture2D flowerTexture[2];
 static Texture2D chompTexture[3];
 static Texture2D spellTexture;
 static Texture2D bubbleTexture[3];
+static Texture2D tileTexture[4];
 
 void DrawLoadResources()
 {
@@ -36,6 +37,10 @@ void DrawLoadResources()
     bubbleTexture[0] = LoadTexture("resources/sprites/bubble_angry.png");
     bubbleTexture[1] = LoadTexture("resources/sprites/bubble_look.png");
     bubbleTexture[2] = LoadTexture("resources/sprites/bubble_eat.png");
+    tileTexture[0] = LoadTexture("resources/tilesets/stairs_Delapouite.png");
+    tileTexture[1] = LoadTexture("resources/tilesets/fire-zone_Lorc.png");
+    tileTexture[2] = LoadTexture("resources/tilesets/wood-pile_Delapouite.png");
+    tileTexture[3] = LoadTexture("resources/tilesets/coral_Delapouite.png");
 }
 
 void DrawUnloadResources()
@@ -55,6 +60,10 @@ void DrawUnloadResources()
     UnloadTexture(bubbleTexture[0]);
     UnloadTexture(bubbleTexture[1]);
     UnloadTexture(bubbleTexture[2]);
+    UnloadTexture(tileTexture[0]);
+    UnloadTexture(tileTexture[1]);
+    UnloadTexture(tileTexture[2]);
+    UnloadTexture(tileTexture[3]);
 }
 
 static Color GetStatusColor(EntityStatus status)
@@ -64,7 +73,7 @@ static Color GetStatusColor(EntityStatus status)
     return WHITE;
 }
 
-void DrawParticle(Particle particle)
+static void DrawParticle(Particle particle)
 {
     char symbol[2];
     symbol[0] = particle.character;
@@ -77,6 +86,16 @@ void DrawParticle(Particle particle)
     DrawText(symbol, particle.body.x - measX/2.0, particle.body.y - fontSize/2.0, fontSize, color);
 }
 
+static Rectangle textureSrc(const Texture2D *tex){
+    return (Rectangle){0, 0, tex->width, tex->height};
+}
+
+static Color transp(Color col)
+{
+    col.a = (col.a/3)*2;
+    return col;
+}
+
 static void DrawLevel(Level *level, DrawLayer layer)
 {
     for (int y = 0; y < level->sizeY; y++)
@@ -85,18 +104,66 @@ static void DrawLevel(Level *level, DrawLayer layer)
         {
             char cell = level->cells[y][x];
             Rectangle rect = {x*TS, y*TS, TS, TS};
+            Rectangle rect2 = {x*TS+3, y*TS+3, TS-6, TS-6};
 
-            if (layer == LAYER0_RUG)
+            switch (cell)
             {
-                switch (cell)
+                case '#':
                 {
-                    case '#': break;
-                    case '~': break;
-                    case 'l': DrawRectangleRec(rect, RED); break;
-                    case 'a': DrawRectangleRec(rect, DARKGRAY); break;
-                    case 'w': DrawRectangleRec(rect, MAROON); break;
+                    if (layer == LAYER2_ENTS) DrawRectangleRec(rect, BLACK);
+                    if (layer == LAYER3_WALLS) DrawRectangleRec(rect, GRAY);
+                    break;
+                }
+                case '~':
+                {
+                    break;
+                }
+                case 'l':
+                {
+                    if (layer == LAYER0_RUG)
+                        DrawRectangleRec(rect, RED);
+                    if (layer == LAYER1_FLOOR)
+                        DrawTexturePro(tileTexture[1], textureSrc(&tileTexture[1]), rect2,
+                                (Vector2){0,0}, 0, transp(MAROON));
+                    break;
+                }
+                case 'a':
+                {
+                    if (layer == LAYER0_RUG)
+                        DrawRectangleRec(rect, DARKGRAY);
+                    break;
+                }
+                case 'w':
+                {
+                    if (layer == LAYER0_RUG)
+                        DrawRectangleRec(rect, BROWN);
+                    if (layer == LAYER2_ENTS)
+                        DrawTexturePro(tileTexture[2], textureSrc(&tileTexture[2]), rect2,
+                                (Vector2){0,0}, 0, transp(BROWN));
+                    break;
+                }
+                case 'r':
+                {
+                    if (layer == LAYER0_RUG)
+                        DrawRectangleRec(rect, DARKGREEN);
+                    if (layer == LAYER1_FLOOR)
+                        DrawTexturePro(tileTexture[3], textureSrc(&tileTexture[3]), rect2,
+                                (Vector2){0,0}, 0, transp(DARKGREEN));
+                    break;
+                }
+                case '$':
+                {
+                    if (layer == LAYER0_RUG)
+                        DrawRectangleRec(rect, YELLOW);
+                    if (layer == LAYER1_FLOOR)
+                        DrawTexturePro(tileTexture[0], textureSrc(&tileTexture[0]), rect2,
+                                (Vector2){0,0}, 0, transp(YELLOW));
+                    break;
+                }
 
-                    default:
+                default:
+                {
+                    if (layer == LAYER0_RUG)
                     {
                         DrawRectangleRec(rect, BLUE);
                         if (cell != ' '){
@@ -106,13 +173,10 @@ static void DrawLevel(Level *level, DrawLayer layer)
                             int txtWidth = MeasureText(symbol, TS);
                             DrawText(symbol, rect.x + (TS - txtWidth)/2.0, rect.y, TS, YELLOW);
                         }
-                        break;
                     }
+                    break;
                 }
             }
-            if (cell == '#' && layer == LAYER2_ENTS) DrawRectangleRec(rect, BLACK);
-            if (cell == '#' && layer == LAYER3_WALLS) DrawRectangleRec(rect, GRAY);
-            if (cell == 'w' && layer == LAYER2_ENTS) DrawRectangleRec(rect, (Color){125, 69, 26, 150});
         }
     }
 }
