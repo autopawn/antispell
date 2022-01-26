@@ -45,6 +45,10 @@ static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Bod
     ent->body = body;
     ent->body.rad = (body.rad == 0)? 0.25*TS : body.rad;
     ent->powerChar = powerChar;
+    if (ent->type == TYPE_MAGE)
+        ent->coins = 10000;
+    if (ent->type == TYPE_CHOMP)
+        ent->coins =  2000;
 
     switch (ent->type)
     {
@@ -79,9 +83,15 @@ State *StateLoadFromFile(const char *fname)
             if (cell=='@') StateAddEntity(state, TYPE_PLAYER, 0, body);
             if (cell=='I') StateAddEntity(state, TYPE_FLOWER, 'I', body);
             if (cell=='C') StateAddEntity(state, TYPE_CHOMP, 'C', body);
+            if (cell=='R') StateAddEntity(state, TYPE_CHOMP, 'R', body);
             if (cell=='E') StateAddEntity(state, TYPE_MAGE, 'E', body);
+            if (cell=='F') StateAddEntity(state, TYPE_MAGE, 'F', body);
         }
     }
+
+    #ifdef SPELL
+        strcpy(state->wand.spell, SPELL);
+    #endif
 
     return state;
 }
@@ -133,6 +143,26 @@ static Particle *AddParticle(Particle *parts, int *partsN, int partsMax, Particl
     }
 }
 
+static void AddExplosion(Entity *ent, int nParticles, Color col, char character)
+{
+    if (nParticles > MAX_ENTITY_PARTICLES)
+        nParticles = MAX_ENTITY_PARTICLES;
+    for (int i = 0; i < nParticles; i++)
+    {
+        Particle part = {0};
+        part.body.x = ((rand()%101 - 50)/100.0)*ent->body.rad;
+        part.body.y = ((rand()%101 - 50)/100.0)*ent->body.rad;
+        part.body.vx = (rand()%101 - 50)/50.0;
+        part.body.vy = (rand()%101 - 50)/50.0;
+        part.body.rad = 9;
+        part.character = character;
+        part.color = col;
+        part.above = 1;
+        part.lifeTime = 40 + rand()%40;
+        AddParticle(ent->particles, &ent->particlesN, MAX_ENTITY_PARTICLES, part);
+    }
+}
+
 static void UpdateParticleList(Particle *parts, int *partsN)
 {
     int particlesN2 = 0;
@@ -166,7 +196,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 part.body.rad = 4;
                 part.lifeTime = 40;
                 part.character = ent->spell.name[p];
-                part.color = ent->spell.color;
+                part.color = ent->spell.color2;
                 AddParticle(state->particles, &state->particlesN, MAX_STATE_PARTICLES, part);
             }
         }
@@ -189,17 +219,32 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
     }
     // Timers
     ent->timeAlive++;
-    ent->cooldown--;
+    ent->cooldown -= (ent->status != STATUS_ASTONISHED);
+    ent->cooldown -= 3*(ent->status == STATUS_ANGRY);
+
+    { // Status particles
+        if (ent->status == STATUS_ONFIRE)
+            AddExplosion(ent, 1, RED, '^');
+    }
 
     { // Status control
-        if (ent->status == STATUS_FROZEN && ent->statusTime >= 800)
+        if (ent->status == STATUS_ONFIRE && ent->statusTime >= 400)
+        {
+            ent->terminate = 1;
+        }
+        else if (ent->status == STATUS_FROZEN && ent->statusTime >= 1000)
+        {
+            ent->status = STATUS_NORMAL;
+            ent->statusTime = 0;
+        }
+        else if (ent->status != STATUS_NORMAL && ent->status != STATUS_FREE && ent->statusTime >= 600)
         {
             ent->status = STATUS_NORMAL;
             ent->statusTime = 0;
         }
         ent->statusTime++;
 
-        if (ent->status == STATUS_FROZEN)
+        if (ent->status == STATUS_FROZEN || ent->status == STATUS_ASTONISHED)
         {
             ent->body.vx = 0;
             ent->body.vy = 0;
@@ -278,43 +323,65 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
         case TYPE_MAGE:
         {
             const Entity *player = StateGetPlayer(state);
-            if (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE &&
-                        LineOfSight(state->level, ent->body, player->body))
+            if (player &&
+                    (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE || ent->status == STATUS_ANGRY) &&
+                    LineOfSight(state->level, ent->body, player->body))
             {
                 ent->lookX = player->body.x;
                 ent->lookY = player->body.y;
                 if (ent->cooldown < 0)
-                {
-                    ent->cooldown = 200;
+                { // Shoot
+
+                    if (ent->powerChar == 'F')
+                    {
+                        ent->cooldown = 40;
+                        ent->lookX += rand()%201 - 100;
+                        ent->lookY += rand()%201 - 100;
+                    }
+                    else
+                    {
+                        ent->cooldown = 200;
+                    }
 
                     Body body = {
                         .x=ent->body.x,
                         .y=ent->body.y,
-                        .vx = player->body.x - ent->body.x,
-                        .vy = player->body.y - ent->body.y,
+                        .vx = ent->lookX - ent->body.x,
+                        .vy = ent->lookY - ent->body.y,
+                        .rad = 0.85*ent->body.rad,
                     };
                     BodyLimitSpeed(&body, 2.0);
                     StateAddEntity(state, TYPE_PROJECTILE, ent->powerChar, body);
                 }
             }
+            if (ent->status == STATUS_FREE)
+                BodyMoveTowards(&ent->body, ent->lookX, ent->lookY, 0.7);
             break;
         }
 
         case TYPE_CHOMP:
         {
             const Entity *player = StateGetPlayer(state);
-            if (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE &&
-                        LineOfSight(state->level, ent->body, player->body))
+            if (player && LineOfSight(state->level, ent->body, player->body))
             {
                 ent->lookX = player->body.x;
                 ent->lookY = player->body.y;
-                BodyAccelTowards(&ent->body, ent->lookX, ent->lookY, 0.1, 4);
             }
-            float deltaXini = ent->body.x - ent->initialBody.x;
-            float deltaYini = ent->body.y - ent->initialBody.y;
-            LimitVector(&deltaXini, &deltaYini, 60);
-            ent->body.x = ent->initialBody.x + deltaXini;
-            ent->body.y = ent->initialBody.y + deltaYini;
+            BodyMoveTowards(&ent->body, ent->lookX, ent->lookY, (ent->status == STATUS_FREE)? 0.4 : 4);
+
+            if (ent->status != STATUS_FREE)
+            {
+                float deltaXini = ent->body.x - ent->initialBody.x;
+                float deltaYini = ent->body.y - ent->initialBody.y;
+                LimitVector(&deltaXini, &deltaYini, (ent->powerChar=='R')? 160 : 60);
+                ent->body.x = ent->initialBody.x + deltaXini;
+                ent->body.y = ent->initialBody.y + deltaYini;
+            }
+            else
+            {
+                ent->initialBody.x = ent->body.x;
+                ent->initialBody.y = ent->body.y;
+            }
             break;
         }
 
@@ -327,16 +394,21 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
 
         case TYPE_SPELL:
         {
-            if (colliding)
+            if (LevelCellIsSolid(floor))
                 ent->terminate = 1;
             // Froze lave floor
-            if (floor == 'l')
+            if (ent->spell.type == SPELLTYPE_ICE && floor == 'l')
             {
-                state->level->cells[cellY][cellX] = ' ';
+                state->level->cells[cellY][cellX] = 'a'; // ashes
+                ent->terminate = 1;
+            }
+            if (ent->spell.type == SPELLTYPE_FIRE && (floor == 'w' || floor == 'r'))
+            {
+                state->level->cells[cellY][cellX] = 'a'; // ashes
                 ent->terminate = 1;
             }
 
-            // Froze other entities
+            // Affect other entities
             for(int i = 0; i < state->entsN; i++)
             {
                 Entity *other = &state->ents[i];
@@ -344,11 +416,83 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 colli = colli && other->type != TYPE_PLAYER;
                 colli = colli && other->type != TYPE_SPELL;
                 colli = colli && other->type != TYPE_PROJECTILE;
-                if (colli && ent->spell.type == SPELLTYPE_ICE && BodyDistance(ent->body, other->body) <= 0)
+                if (colli && BodyDistance(ent->body, other->body) <= 0)
                 {
-                    other->status = STATUS_FROZEN;
-                    other->statusTime = 0;
                     ent->terminate = 1;
+                    switch (ent->spell.type)
+                    {
+                        case SPELLTYPE_ICE:
+                        {
+                            other->status = STATUS_FROZEN;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        case SPELLTYPE_FIRE:
+                        {
+                            other->status = STATUS_ONFIRE;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        case SPELLTYPE_FEE:
+                        case SPELLTYPE_IRE:
+                        case SPELLTYPE_REIF:
+                        {
+                            if (other->type == TYPE_MAGE || other->type == TYPE_CHOMP)
+                            {
+                                Entity *player = StateGetPlayer(state);
+                                other->status = STATUS_ANGRY;
+                                other->statusTime = 0;
+                                int coins_lost = 0;
+                                if (ent->spell.type == SPELLTYPE_FEE)
+                                    coins_lost = (other->coins + 9)/10;
+                                if (ent->spell.type == SPELLTYPE_REIF)
+                                    coins_lost = 1000;
+                                if (other->coins < coins_lost)
+                                    coins_lost = other->coins;
+                                other->coins -= coins_lost;
+                                if (player)
+                                    player->coins += coins_lost;
+                                AddExplosion(other, (coins_lost+99)/100, YELLOW, '$');
+                            }
+                            break;
+                        }
+                        case SPELLTYPE_RICE:
+                        {
+                            other->status = STATUS_YUMMY;
+                            other->statusTime = 0;
+                            other->body.rad += 4;
+                            break;
+                        }
+                        case SPELLTYPE_FREE:
+                        {
+                            other->status = STATUS_FREE;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Distract other entities
+            if (ent->spell.type == SPELLTYPE_REFER && ent->terminate == 1)
+            {
+                for(int i = 0; i < state->entsN; i++)
+                {
+                    Entity *other = &state->ents[i];
+                    if (other->type == TYPE_MAGE || other->type == TYPE_CHOMP)
+                    {
+                        if (other->status <= STATUS_ASTONISHED)
+                        {
+                            other->status = STATUS_ASTONISHED;
+                            other->statusTime = 0;
+                            other->lookX = ent->body.x;
+                            other->lookY = ent->body.y;
+                        }
+                    }
                 }
             }
             break;
@@ -463,7 +607,7 @@ void StateUpdate(State *state, int process_pressed_keys)
     for (int i = 0; i < state->entsN; i++)
     {
         Entity *ent = &state->ents[i];
-        int colliding = UpdateBody(state->level, &ent->body);
+        int colliding = UpdateBody((ent->type == TYPE_SPELL)? NULL : state->level, &ent->body);
         StateUpdateEntity(state, ent, colliding, process_pressed_keys);
     }
 

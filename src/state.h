@@ -7,7 +7,7 @@
 
 #define MAX_SPELL_LENGHT 5
 
-#define MAX_ENTITY_PARTICLES 8
+#define MAX_ENTITY_PARTICLES 12
 #define MAX_STATE_PARTICLES 400
 
 typedef enum {
@@ -21,6 +21,11 @@ typedef enum {
 
 typedef enum {
     STATUS_NORMAL,
+    STATUS_YUMMY,
+    STATUS_ANGRY,
+    STATUS_FREE,
+    STATUS_ASTONISHED,
+    STATUS_ONFIRE,
     STATUS_FROZEN,
 } EntityStatus;
 
@@ -29,6 +34,7 @@ typedef struct {
     int lifeTime;
     char character;
     Color color;
+    int above;
 } Particle;
 
 typedef struct {
@@ -52,6 +58,8 @@ typedef struct {
 
     Particle particles[MAX_ENTITY_PARTICLES];
     int particlesN;
+
+    int coins;
 } Entity;
 
 typedef enum

@@ -133,6 +133,15 @@ void BodyAccelTowards(Body *body, float tgtX, float tgtY, float accel, float max
     BodyLimitSpeed(body, maxSpeed);
 }
 
+void BodyMoveTowards(Body *body, float tgtX, float tgtY, float speed)
+{
+    float dx = tgtX - body->x;
+    float dy = tgtY - body->y;
+    body->vx = dx;
+    body->vy = dy;
+    BodyLimitSpeed(body, speed);
+}
+
 int BodySetSpeed(Body *body, float mag){
     float cmag = sqrtf( body->vx*body->vx + body->vy*body->vy);
     if (cmag <= 0) return 0;

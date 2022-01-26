@@ -13,7 +13,7 @@ typedef struct {
 
 static inline int LevelCellIsSolid(char cell)
 {
-    return cell == '#' || cell == '~';
+    return cell == '#' || cell == '~' || cell == 'w';
 }
 
 static inline char LevelGetAt(const Level *level, int y, int x)

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "spell_catalog.h"
 
@@ -16,6 +17,7 @@ static Texture2D bunnyTexture[2];
 static Texture2D flowerTexture[2];
 static Texture2D chompTexture[3];
 static Texture2D spellTexture;
+static Texture2D bubbleTexture[3];
 
 void DrawLoadResources()
 {
@@ -31,6 +33,9 @@ void DrawLoadResources()
     chompTexture[1] = LoadTexture("resources/sprites/chomp1.png");
     chompTexture[2] = LoadTexture("resources/sprites/base.png");
     spellTexture = LoadTexture("resources/sprites/spell.png");
+    bubbleTexture[0] = LoadTexture("resources/sprites/bubble_angry.png");
+    bubbleTexture[1] = LoadTexture("resources/sprites/bubble_look.png");
+    bubbleTexture[2] = LoadTexture("resources/sprites/bubble_eat.png");
 }
 
 void DrawUnloadResources()
@@ -47,11 +52,15 @@ void DrawUnloadResources()
     UnloadTexture(chompTexture[1]);
     UnloadTexture(chompTexture[2]);
     UnloadTexture(spellTexture);
+    UnloadTexture(bubbleTexture[0]);
+    UnloadTexture(bubbleTexture[1]);
+    UnloadTexture(bubbleTexture[2]);
 }
 
 static Color GetStatusColor(EntityStatus status)
 {
     if (status == STATUS_FROZEN) return SKYBLUE;
+    if (status == STATUS_ONFIRE) return RED;
     return WHITE;
 }
 
@@ -77,11 +86,15 @@ static void DrawLevel(Level *level, DrawLayer layer)
             char cell = level->cells[y][x];
             Rectangle rect = {x*TS, y*TS, TS, TS};
 
-            if (layer == LAYER0_RUG && !LevelCellIsSolid(cell))
+            if (layer == LAYER0_RUG)
             {
                 switch (cell)
                 {
+                    case '#': break;
+                    case '~': break;
                     case 'l': DrawRectangleRec(rect, RED); break;
+                    case 'a': DrawRectangleRec(rect, DARKGRAY); break;
+                    case 'w': DrawRectangleRec(rect, MAROON); break;
 
                     default:
                     {
@@ -99,6 +112,7 @@ static void DrawLevel(Level *level, DrawLayer layer)
             }
             if (cell == '#' && layer == LAYER2_ENTS) DrawRectangleRec(rect, BLACK);
             if (cell == '#' && layer == LAYER3_WALLS) DrawRectangleRec(rect, GRAY);
+            if (cell == 'w' && layer == LAYER2_ENTS) DrawRectangleRec(rect, (Color){125, 69, 26, 150});
         }
     }
 }
@@ -107,27 +121,32 @@ static int isWhite(Color col){
     return col.r == 255 && col.g == 255 && col.b == 255 && col.a == 255;
 }
 
+static void DrawStateParticles(State *state, int above)
+{
+    for (int k = 0; k < state->particlesN; k++)
+    {
+        if (state->particles[k].above != above) continue;
+        DrawParticle(state->particles[k]);
+    }
+    for (int i = 0; i < state->entsN; i++)
+    {
+        for (int k = 0; k < state->ents[i].particlesN; k++)
+        {
+            Particle part = state->ents[i].particles[k];
+            if (part.above != above) continue;
+            part.body.x += state->ents[i].body.x;
+            part.body.y += state->ents[i].body.y;
+            DrawParticle(part);
+        }
+    }
+}
 
 void DrawState(State *state, DrawLayer layer){
     // Draw level
     DrawLevel(state->level, layer);
 
     if (layer == LAYER2_ENTS)
-    {
-        // Draw particles
-        for (int k = 0; k < state->particlesN; k++)
-            DrawParticle(state->particles[k]);
-        for (int i = 0; i < state->entsN; i++)
-        {
-            for (int k = 0; k < state->ents[i].particlesN; k++)
-            {
-                Particle part = state->ents[i].particles[k];
-                part.body.x += state->ents[i].body.x;
-                part.body.y += state->ents[i].body.y;
-                DrawParticle(part);
-            }
-        }
-    }
+        DrawStateParticles(state, 0);
 
     // Draw ents
     for (int i = 0; i < state->entsN; i++)
@@ -136,7 +155,7 @@ void DrawState(State *state, DrawLayer layer){
         if (layer == LAYER0_RUG)
         {
             DrawCircle(ent->body.x, ent->body.y, ent->body.rad, (Color){0, 0, 0, 128});
-            if (ent->type == TYPE_CHOMP)
+            if (ent->type == TYPE_CHOMP && ent->status != STATUS_FREE)
             {
                 DrawLineEx((Vector2){ent->initialBody.x, ent->initialBody.y},
                         (Vector2){ent->body.x, ent->body.y}, 5, (Color){0, 0, 0, 128});
@@ -211,9 +230,12 @@ void DrawState(State *state, DrawLayer layer){
                     Color statusColor = GetStatusColor(ent->status);
                     Color entColor = isWhite(statusColor)? GetPowerCharColor(ent->powerChar) : statusColor;
 
-                    DrawTexturePro(chompTexture[2], src, dst1, origin, 0, WHITE);
-                    DrawLineEx((Vector2){ent->initialBody.x, ent->initialBody.y},
-                        (Vector2){ent->body.x, ent->body.y}, 5, entColor);
+                    if (ent->status != STATUS_FREE)
+                    {
+                        DrawTexturePro(chompTexture[2], src, dst1, origin, 0, WHITE);
+                        DrawLineEx((Vector2){ent->initialBody.x, ent->initialBody.y},
+                            (Vector2){ent->body.x, ent->body.y}, 5, entColor);
+                    }
                     DrawTexturePro(chompTexture[0], src, dst2, origin, rotation, entColor);
                     DrawTexturePro(chompTexture[1], src, dst2, origin, rotation, statusColor);
                     break;
@@ -226,11 +248,28 @@ void DrawState(State *state, DrawLayer layer){
                 }
             }
         }
+        if (layer == LAYER3_WALLS)
+        {
+            int textureId = -1;
+            if (ent->status == STATUS_ANGRY)      textureId = 0;
+            if (ent->status == STATUS_ASTONISHED) textureId = 1;
+            if (ent->status == STATUS_YUMMY)      textureId = 2;
+            if (textureId >= 0)
+            {
+                DrawTexture(bubbleTexture[textureId], ent->body.x + ent->body.rad/2,
+                       ent->body.y - bubbleTexture[textureId].height - ent->body.rad/2, WHITE);
+            }
+        }
     }
+
+    if (layer == LAYER2_ENTS)
+        DrawStateParticles(state, 1);
 }
 
 void DrawGUI(State *state)
 {
+    Entity *player = StateGetPlayer(state);
+
     float wandX = (GetScreenWidth() - wandTexture[0].width)/2.0;
 
     Spell spell = GetSpell(state->wand.spell);
@@ -279,5 +318,17 @@ void DrawGUI(State *state)
         float movY = rand()%7 - 3;
         DrawText(symbol, symbX - 2 + movX, 12 + movY, 32, BLACK);
         DrawText(symbol, symbX + movX, 10 + movY, 32, color);
+    }
+
+    if (player)
+    {
+        if (player->coins)
+        {
+            char coinss[100];
+            sprintf(coinss, "$ %d", player->coins);
+            int measX = MeasureText(coinss, 32);
+            DrawText(coinss, GetScreenWidth() - measX - 4 - 2, GetScreenHeight() - 36 + 2, 32, BLACK);
+            DrawText(coinss, GetScreenWidth() - measX - 4, GetScreenHeight() - 36, 32, YELLOW);
+        }
     }
 }

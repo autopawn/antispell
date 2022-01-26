@@ -57,6 +57,9 @@ BUILD_WEB_HEAP_SIZE   ?= 134217728
 BUILD_WEB_RESOURCES   ?= TRUE
 BUILD_WEB_RESOURCES_PATH  ?= resources
 
+# Initial spell
+SPELL ?= NONE
+
 # Use cross-compiler for PLATFORM_RPI
 ifeq ($(PLATFORM),PLATFORM_RPI)
     USE_RPI_CROSS_COMPILER ?= FALSE
@@ -203,6 +206,10 @@ else
     else
         CFLAGS += -s -O2
     endif
+endif
+
+ifneq ($(SPELL),NONE)
+    CFLAGS += -D SPELL=\"$(SPELL)\"
 endif
 
 # Additional flags for compiler (if desired)

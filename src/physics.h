@@ -14,8 +14,11 @@ void LimitVector(float *x, float *y, float mag);
 // Limits the body speed to the given magnitude
 void BodyLimitSpeed(Body *body, float mag);
 
-// Move towards a given position
+// Accel towards a given position
 void BodyAccelTowards(Body *body, float tgtX, float tgtY, float accel, float maxSpeed);
+
+// Move towards a given position, set the speed.
+void BodyMoveTowards(Body *body, float tgtX, float tgtY, float speed);
 
 // Makes the body speed have the given magnitude, preserving the angle.
 // Retrieves 0 ff current speed is 0.
