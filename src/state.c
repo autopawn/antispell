@@ -14,6 +14,8 @@ static const int WAND_ABSORV_TIME = 25;
 
 static const float ENEMY_VISION_RANGE = 300;
 
+static const float PLAYER_SPEED = 2.0;
+
 static const int TS = LEVEL_TILE_SIZE;
 
 static Sound wandBellSfx;
@@ -254,11 +256,10 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
         }
     }
 
-
     // Current cell
     int cellX = ent->body.x/TS;
     int cellY = ent->body.y/TS;
-    char floor = LevelGetAt(state-> level, cellY, cellX);
+    char floor = LevelGetAt(state->level, cellY, cellX);
 
     // Entity intelligence
     switch (ent->type)
@@ -270,7 +271,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             if (IsKeyDown(KEY_D)) ent->body.vx += 0.1;
             if (IsKeyDown(KEY_W)) ent->body.vy -= 0.1;
             if (IsKeyDown(KEY_S)) ent->body.vy += 0.1;
-            BodyLimitSpeed(&ent->body, 2.0);
+            BodyLimitSpeed(&ent->body, PLAYER_SPEED);
             if (!IsKeyDown(KEY_A) && !IsKeyDown(KEY_D))
                 ent->body.vx *= 0.6;
             if (!IsKeyDown(KEY_W) && !IsKeyDown(KEY_S))
@@ -396,20 +397,6 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
 
         case TYPE_SPELL:
         {
-            if (LevelCellIsSolid(floor))
-                ent->terminate = 1;
-            // Froze lave floor
-            if (ent->spell.type == SPELLTYPE_ICE && floor == 'l')
-            {
-                state->level->cells[cellY][cellX] = 'a'; // ashes
-                ent->terminate = 1;
-            }
-            if (ent->spell.type == SPELLTYPE_FIRE && (floor == 'w' || floor == 'r'))
-            {
-                state->level->cells[cellY][cellX] = 'a'; // ashes
-                ent->terminate = 1;
-            }
-
             // Affect other entities
             for(int i = 0; i < state->entsN; i++)
             {
@@ -420,17 +407,18 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 colli = colli && other->type != TYPE_PROJECTILE;
                 if (colli && BodyDistance(ent->body, other->body) <= 0)
                 {
-                    ent->terminate = 1;
                     switch (ent->spell.type)
                     {
                         case SPELLTYPE_ICE:
                         {
+                            ent->terminate = 1;
                             other->status = STATUS_FROZEN;
                             other->statusTime = 0;
                             break;
                         }
                         case SPELLTYPE_FIRE:
                         {
+                            ent->terminate = 1;
                             other->status = STATUS_ONFIRE;
                             other->statusTime = 0;
                             break;
@@ -439,6 +427,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         case SPELLTYPE_IRE:
                         case SPELLTYPE_REIF:
                         {
+                            ent->terminate = 1;
                             if (other->type == TYPE_MAGE || other->type == TYPE_CHOMP)
                             {
                                 Entity *player = StateGetPlayer(state);
@@ -460,6 +449,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         }
                         case SPELLTYPE_RICE:
                         {
+                            ent->terminate = 1;
                             other->status = STATUS_YUMMY;
                             other->statusTime = 0;
                             other->body.rad += 4;
@@ -467,6 +457,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         }
                         case SPELLTYPE_FREE:
                         {
+                            ent->terminate = 1;
                             other->status = STATUS_FREE;
                             other->statusTime = 0;
                             break;
@@ -477,6 +468,26 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         }
                     }
                 }
+            }
+
+            if (LevelCellIsSolid(floor))
+                ent->terminate = 1;
+            // Froze lava floor
+            if (ent->spell.type == SPELLTYPE_ICE && floor == 'l')
+            {
+                state->level->cells[cellY][cellX] = 'a'; // ashes
+                ent->terminate = 1;
+            }
+            // Burn wood or reef
+            if (ent->spell.type == SPELLTYPE_FIRE && (floor == 'w' || floor == 'r'))
+            {
+                state->level->cells[cellY][cellX] = 'a'; // ashes
+                ent->terminate = 1;
+            }
+            // Generate reef
+            if (ent->spell.type == SPELLTYPE_REEF && floor == ' ')
+            {
+                state->level->cells[cellY][cellX] = 'r'; // reef
             }
 
             // Distract other entities
@@ -609,7 +620,19 @@ void StateUpdate(State *state, int process_pressed_keys)
     for (int i = 0; i < state->entsN; i++)
     {
         Entity *ent = &state->ents[i];
+        // Environment modifiers
+        if (ent->type != TYPE_PROJECTILE && ent->type != TYPE_SPELL)
+        {
+            // Current cell
+            int cellX = ent->body.x/TS;
+            int cellY = ent->body.y/TS;
+            char floor = LevelGetAt(state-> level, cellY, cellX);
+            if (floor == 'r')
+                BodyLimitSpeed(&ent->body, (ent->type == TYPE_PLAYER)? 0.8*PLAYER_SPEED : 0.1);
+        }
+        // Update physics
         int colliding = UpdateBody((ent->type == TYPE_SPELL)? NULL : state->level, &ent->body);
+        // Update entity
         StateUpdateEntity(state, ent, colliding, process_pressed_keys);
     }
 
