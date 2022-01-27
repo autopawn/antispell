@@ -38,13 +38,13 @@ static int BodyCollidesWithLevel(const Level *level, Body body)
 
 }
 
-static int moveBody(const Level *level, Body *body, float remX, float remY)
+static int moveBody(const Level *level, Body *body, float remX, float remY, float factor)
 {
     if (remX == 0 && remY == 0) return 0;
 
     Body next = *body;
-    next.x += remX;
-    next.y += remY;
+    next.x += remX*factor;
+    next.y += remY*factor;
     if (!BodyCollidesWithLevel(level, next))
     {
         *body = next;
@@ -76,7 +76,7 @@ static int moveBody(const Level *level, Body *body, float remX, float remY)
         if (BodyCollidesWithLevel(level, next))
         {
             body->vx = 0;
-            moveBody(level, body, 0, remY);
+            moveBody(level, body, 0, remY, factor);
             return 1;
         }
     }
@@ -88,22 +88,22 @@ static int moveBody(const Level *level, Body *body, float remX, float remY)
         if (BodyCollidesWithLevel(level, next))
         {
             body->vy = 0;
-            moveBody(level, body, remX, 0);
+            moveBody(level, body, remX, 0, factor);
             return 1;
         }
     }
     return 1;
 }
 
-int UpdateBody(const Level *level, Body *body)
+int UpdateBody(const Level *level, Body *body, float factor)
 {
     if (!level)
     {
-        body->x += body->vx;
-        body->y += body->vy;
+        body->x += body->vx*factor;
+        body->y += body->vy*factor;
         return 0;
     }
-    return moveBody(level, body, body->vx, body->vy);
+    return moveBody(level, body, body->vx, body->vy, factor);
 }
 
 // Limits the vector to a given magnitude

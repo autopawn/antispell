@@ -92,7 +92,7 @@ static Rectangle textureSrc(const Texture2D *tex){
 
 static Color transp(Color col)
 {
-    col.a = (col.a/3)*2;
+    col.a = col.a/3;
     return col;
 }
 
@@ -139,7 +139,7 @@ static void DrawLevel(Level *level, DrawLayer layer)
                         DrawRectangleRec(rect, BROWN);
                     if (layer == LAYER2_ENTS)
                         DrawTexturePro(tileTexture[2], textureSrc(&tileTexture[2]), rect2,
-                                (Vector2){0,0}, 0, transp(BROWN));
+                                (Vector2){0,0}, 0, BROWN);
                     break;
                 }
                 case 'r':

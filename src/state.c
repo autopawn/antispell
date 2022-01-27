@@ -15,6 +15,7 @@ static const int WAND_ABSORV_TIME = 25;
 static const float ENEMY_VISION_RANGE = 300;
 
 static const float PLAYER_SPEED = 2.0;
+static const float SPELL_SPEED = 4.0;
 
 static const int TS = LEVEL_TILE_SIZE;
 
@@ -175,7 +176,7 @@ static void UpdateParticleList(Particle *parts, int *partsN)
         if (parts[k].lifeTime > 0)
         {
             parts[k].lifeTime--;
-            UpdateBody(NULL, &parts[k].body);
+            UpdateBody(NULL, &parts[k].body, 1.0);
             parts[particlesN2++] = parts[k];
         }
     }
@@ -305,7 +306,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                     .vy = ent->lookY - ent->body.y,
                     .rad = 0.3*TS,
                 };
-                if (BodySetSpeed(&body, 4.0) == 1)
+                if (BodySetSpeed(&body, SPELL_SPEED) == 1)
                 {
                     Entity *attack = StateAddEntity(state, TYPE_SPELL, 0, body);
                     attack->spell = state->wand.spell;
@@ -621,17 +622,21 @@ void StateUpdate(State *state, int process_pressed_keys)
     {
         Entity *ent = &state->ents[i];
         // Environment modifiers
-        if (ent->type != TYPE_PROJECTILE && ent->type != TYPE_SPELL)
+        float slowFactor = 1.0;
+        // Current cell
+        int cellX = ent->body.x/TS;
+        int cellY = ent->body.y/TS;
+        char floor = LevelGetAt(state-> level, cellY, cellX);
+        if (floor == 'r')
         {
-            // Current cell
-            int cellX = ent->body.x/TS;
-            int cellY = ent->body.y/TS;
-            char floor = LevelGetAt(state-> level, cellY, cellX);
-            if (floor == 'r')
-                BodyLimitSpeed(&ent->body, (ent->type == TYPE_PLAYER)? 0.8*PLAYER_SPEED : 0.1);
+            slowFactor = 0.08;
+            if (ent->type == TYPE_PLAYER)     slowFactor = 0.8;
+            if (ent->type == TYPE_SPELL)      slowFactor = 0.8;
+            if (ent->type == TYPE_PROJECTILE) slowFactor = 0.3;
         }
         // Update physics
-        int colliding = UpdateBody((ent->type == TYPE_SPELL)? NULL : state->level, &ent->body);
+        int colliding = UpdateBody((ent->type == TYPE_SPELL)? NULL : state->level,
+                &ent->body, slowFactor);
         // Update entity
         StateUpdateEntity(state, ent, colliding, process_pressed_keys);
     }

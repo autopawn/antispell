@@ -28,7 +28,7 @@ int BodySetSpeed(Body *body, float mag);
 float BodyDistance(Body body1, Body body2);
 
 // Updates body, retrieves 1 on collision with level
-int UpdateBody(const Level *level, Body *body);
+int UpdateBody(const Level *level, Body *body, float factor);
 
 // Wheter there is a line of sight between body1 and body2
 int LineOfSight(const Level *level, Body body1, Body body2);
