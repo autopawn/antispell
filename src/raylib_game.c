@@ -21,6 +21,9 @@
     #include <emscripten/emscripten.h>
 #endif
 
+// Total number of levels
+#define N_LEVELS 2
+
 //----------------------------------------------------------------------------------
 // Shared Variables Definition (global)
 // NOTE: Those variables are shared between modules through screens.h
@@ -42,6 +45,8 @@ static bool onTransition = false;
 static bool transFadeOut = false;
 static int transFromScreen = -1;
 static int transToScreen = -1;
+
+static int currentLevel = 0;
 
 //----------------------------------------------------------------------------------
 // Local Functions Declaration
@@ -74,8 +79,14 @@ int main(void)
     PlayMusicStream(music);
 
     // Setup and init first screen
-    currentScreen = GAMESCREEN_GAMEPLAY;
-    InitGameplayScreen();
+    #ifdef _DEBUG
+        currentScreen = GAMESCREEN_GAMEPLAY;
+        currentLevel = 0;
+        InitGameplayScreen(currentLevel);
+    #else
+        currentLevel = 1;
+        InitLogoScreen();
+    #endif
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 48, 1);
@@ -136,7 +147,7 @@ static void ChangeToScreen(int screen)
     {
         case GAMESCREEN_LOGO: InitLogoScreen(); break;
         case GAMESCREEN_TITLE: InitTitleScreen(); break;
-        case GAMESCREEN_GAMEPLAY: InitGameplayScreen(); break;
+        case GAMESCREEN_GAMEPLAY: InitGameplayScreen(currentLevel); break;
         case GAMESCREEN_ENDING: InitEndingScreen(); break;
         default: break;
     }
@@ -183,7 +194,7 @@ static void UpdateTransition(void)
             {
                 case GAMESCREEN_LOGO: InitLogoScreen(); break;
                 case GAMESCREEN_TITLE: InitTitleScreen(); break;
-                case GAMESCREEN_GAMEPLAY: InitGameplayScreen(); break;
+                case GAMESCREEN_GAMEPLAY: InitGameplayScreen(currentLevel); break;
                 case GAMESCREEN_ENDING: InitEndingScreen(); break;
                 default: break;
             }
@@ -252,7 +263,21 @@ static void UpdateDrawFrame(void)
             {
                 UpdateGameplayScreen();
 
-                if (FinishGameplayScreen() == 1) TransitionToScreen(GAMESCREEN_ENDING);
+                int result = FinishGameplayScreen();
+
+                if (result > 0)
+                {
+                    if (result == 2) currentLevel++;
+                    if (currentLevel > N_LEVELS)
+                    {
+                        currentLevel = 1;
+                        TransitionToScreen(GAMESCREEN_ENDING);
+                    }
+                    else
+                    {
+                        TransitionToScreen(GAMESCREEN_GAMEPLAY);
+                    }
+                }
                 //else if (FinishGameplayScreen() == 2) TransitionToScreen(GAMESCREEN_TITLE);
 
             } break;

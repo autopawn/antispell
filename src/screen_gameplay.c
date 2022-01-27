@@ -39,7 +39,6 @@ const float HLEV_ZOOM_MULT = 1.04;
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
-static int finishScreen = 0;
 
 static Vector2 camCenter;
 static State *state;
@@ -53,9 +52,12 @@ static Sound timeSpeedSfx[2];
 //----------------------------------------------------------------------------------
 
 // Gameplay Screen Initialization logic
-void InitGameplayScreen(void)
+void InitGameplayScreen(int level)
 {
-    state = StateLoadFromFile("resources/levels/02.txt");
+    char levelFilename[200];
+    sprintf(levelFilename, "resources/levels/%02d.txt", level);
+
+    state = StateLoadFromFile(levelFilename);
     LevelPrint(state->level);
 
     floorTexture = LoadTexture("resources/fabric61.png");
@@ -66,7 +68,6 @@ void InitGameplayScreen(void)
     timeSpeedSfx[1] = LoadSound("resources/sfx/time_speedup.wav");
 
     framesCounter = 0;
-    finishScreen = 0;
     wandAbsorving = 0;
 
     const Entity *player = StateGetPlayer(state);
@@ -98,14 +99,6 @@ void UpdateGameplayScreen(void)
     {
         camCenter.x = 0.8*camCenter.x + 0.2*player->lookX;
         camCenter.y = 0.8*camCenter.y + 0.2*player->lookY;
-    }
-
-
-    // Press enter or tap to change to ENDING screen
-    if (IsKeyPressed(KEY_ENTER))
-    {
-        finishScreen = 1;
-        PlaySound(fxCoin);
     }
 
     framesCounter++;
@@ -165,5 +158,9 @@ void UnloadGameplayScreen(void)
 // Gameplay Screen should finish?
 int FinishGameplayScreen(void)
 {
-    return finishScreen;
+    if (state->result == STATERESULT_NEXTLEVEL && state->resultTime > 30)
+        return 2;
+    if (state->result == STATERESULT_RETRY && state->resultTime > 30)
+        return 1;
+    return 0;
 }

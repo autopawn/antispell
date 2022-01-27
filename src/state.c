@@ -641,6 +641,28 @@ void StateUpdate(State *state, int process_pressed_keys)
         StateUpdateEntity(state, ent, colliding, process_pressed_keys);
     }
 
+    // Udpate state result
+    state->resultTime++;
+    if (state->result == STATERESULT_CONTINUE)
+    {
+        Entity *player = StateGetPlayer(state);
+        if (!player)
+        {
+            state->result = STATERESULT_RETRY;
+            state->resultTime = 0;
+        }
+        else
+        {
+            int playerCellX = player->body.x/TS;
+            int playerCellY = player->body.y/TS;
+            if (LevelGetAt(state->level, playerCellY, playerCellX) == '$')
+            {
+                state->result = STATERESULT_NEXTLEVEL;
+                state->resultTime = 0;
+            }
+        }
+    }
+
     // Update frame counter
     state->frame++;
 }

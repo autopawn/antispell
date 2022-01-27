@@ -71,6 +71,12 @@ typedef enum
     WANDSIGNAL_SPELL = 4,
 } WandSignal;
 
+typedef enum {
+    STATERESULT_CONTINUE = 0,
+    STATERESULT_RETRY,
+    STATERESULT_NEXTLEVEL,
+} StateResult;
+
 typedef struct {
     int frame;
 
@@ -92,6 +98,9 @@ typedef struct {
 
     Particle particles[MAX_STATE_PARTICLES];
     int particlesN;
+
+    StateResult result;
+    int resultTime;
 } State;
 
 

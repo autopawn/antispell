@@ -206,9 +206,6 @@ static void DrawStateParticles(State *state, int above)
 }
 
 void DrawState(State *state, DrawLayer layer){
-    // Draw level
-    DrawLevel(state->level, layer);
-
     if (layer == LAYER2_ENTS)
         DrawStateParticles(state, 0);
 
@@ -328,6 +325,9 @@ void DrawState(State *state, DrawLayer layer){
 
     if (layer == LAYER2_ENTS)
         DrawStateParticles(state, 1);
+
+    // Draw level
+    DrawLevel(state->level, layer);
 }
 
 void DrawGUI(State *state)
