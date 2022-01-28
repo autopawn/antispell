@@ -44,6 +44,7 @@ static Texture2D antimageTexture;
 static const int PHASE1 = 10;
 static const int PHASE2 = 60;
 static const int PHASE3 = 130;
+static const int PHASE4 = 180;
 
 static const char *TITLE = "ANTISPELL";
 
@@ -142,6 +143,27 @@ void DrawTitleScreen(void)
         DrawText(symbol, letterX - letterW/2 + moveX, letterY - FONT_SIZE/2 + moveY, FONT_SIZE, WHITE);
         DrawText(symbol, letterX - letterW/2 - moveX, letterY - FONT_SIZE/2 - moveY, FONT_SIZE, WHITE);
         DrawText(symbol, letterX - letterW/2, letterY - FONT_SIZE/2, FONT_SIZE, WHITE);
+    }
+
+    if (framesCounter >= PHASE4)
+    {
+        const char *pressEnterText = "PRESS ENTER";
+        int FONT_SIZE = 24;
+
+        float textX = screenW*0.5;
+        float textY = screenH*0.2;
+        int textW = MeasureText(pressEnterText, FONT_SIZE);
+
+        int moveX = rand()%5-2;
+        int moveY = rand()%5-2;
+
+        DrawText(pressEnterText, textX - textW/2 - moveX, textY - FONT_SIZE/2 - moveY, FONT_SIZE, WHITE);
+        DrawText(pressEnterText, textX - textW/2 + moveX, textY - FONT_SIZE/2 + moveY, FONT_SIZE, WHITE);
+        DrawText(pressEnterText, textX - textW/2, textY - FONT_SIZE/2, FONT_SIZE, WHITE);
+
+        FONT_SIZE = 12;
+        Color copyrightColor = ORANGE;
+        DrawText("© Francisco Casas 2022", 4, screenH - FONT_SIZE - 4, FONT_SIZE, copyrightColor);
     }
 }
 
