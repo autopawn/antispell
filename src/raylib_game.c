@@ -260,6 +260,7 @@ static void UpdateDrawFrame(void)
                 // Faster!
                 UpdateLogoScreen();
                 UpdateLogoScreen();
+                UpdateLogoScreen();
 
                 if (FinishLogoScreen()) TransitionToScreen(GAMESCREEN_TITLE);
 

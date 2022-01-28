@@ -16,18 +16,19 @@ _Copyright (c) 2014-2022 Ramon Santamaria ([@raysan5](https://twitter.com/raysan
 
 ## ANTISPELL
 
-![$(Game Title)](screenshots/screenshot000.png "$(Game Title)")
+![Antispell](screenshots/title.gif)
 
 ### Description
 
-A top-down shooter where you have to craft your own spells from enemy attacks!
+A top-down shooter where you have to use your enemies' attacks to spell your spells!
 
 ### Features
 
- - Absorb letters getting close of enemy attacks. But don't get too close!
+ - Absorb letters getting close to enemy attacks. But don't get too close!
  - Use the letters to form real language words.
  - Most words do something interesting! Try them out.
- - Slow motion when near enemy attacks.
+ - Bullet time when enemy attacks are close.
+ - Use the right spells to avoid the dangers of each level and reach the stairs.
 
 ### Controls
 
@@ -36,25 +37,29 @@ Keyboard:
 
 Mouse:
  - Move the mouse to look/aim.
- - Left click shoots the spell (if a valid one was formed).
+ - Left click shoots the spell (if you formed a valid word).
  - Right click deletes last letter.
 
 ### Screenshots
 
-_TODO: Show your game to the world, animated GIFs recommended!._
+![](screenshots/gameplay001.gif)
+
+![](screenshots/gameplay002.gif)
 
 ### Developers
 
-- Francisco Casas 🇨🇱
+- Francisco Casas
 
-### Links
+Greetings from 🇨🇱!
+
+<!-- ### Links
 
  - YouTube Gameplay: $(YouTube Link)
- - itch.io Release: $(itch.io Game Page)
- - Steam Release: $(Steam Game Page)
+ - itch.io Release: $(itch.io Game Page) -->
 
 ### License
 
 This game sources are licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.
 
 *Copyright (c) 2022 Francisco Casas (autopawn)*
+

@@ -1,30 +1,63 @@
-Made by Francisco Casas:
+== TITLE SCREEN ==
 
-- gui/wand0.png
-- gui/wand1.png
+Title screen background is a modified version of gate.png from
+"Fortress background/storyboard image " by Joakim Persson
+https://opengameart.org/content/fortress-backgroundstoryboard-image
+licensed CC-BY-SA 3.0, GPL 2.0, GPL 3.0:
+https://creativecommons.org/licenses/by-sa/3.0/
 
+=== GAMEPLAY GRAPHICS ===
 
-
-
-# `fabric64.png`
-
-Made from https://ambientcg.com/view?id=Fabric061
-
+Floor background texture is a modified version of
+https://ambientcg.com/view?id=Fabric061
 From ambientCG.com, licensed under CC0 1.0 Universal.
+https://creativecommons.org/publicdomain/zero/1.0/
 
-# `sfx/wand_bell.wav
+Enemy bubbles use icons from actuallyKron's 16x16-Emoji-Pack
+Licenced under CC0 1.0 Universal.
+https://creativecommons.org/publicdomain/zero/1.0/
 
+Tiles use icons from game-icons.net made by Lorc and Delapouite
+Licensed under Creative Commons: By Attribution 3.0 License
+https://creativecommons.org/licenses/by/3.0/
+
+=== GAMEPLAY SOUND EFFECTS ===
+
+Correct spells SFX is "Correct Bell" by Fupi
 https://opengameart.org/content/correct-bell
+Public Domain Dedication
+https://creativecommons.org/publicdomain/zero/1.0/
+
+=== MUSIC ===
+
+"Gothamlicious" by Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Night Vigil" by Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Ether Vox" by Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Hot Pursuit" by Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
 
 
-# tilesets/
+=== OTHERS ==
 
-See packs/icons
+'coin.wav' and 'mecha.png' came with the raylib-game-template
+https://github.com/raysan5/raylib-game-template
+Under the zlib/libpng License (Zlib)
+https://opensource.org/licenses/Zlib
 
-https://game-icons.net/
 
-# Bubbles
+=== NOTICE ==
 
-Bubbles are based on 16x16-Emoji-Pack
+All other multimedia resources were made by myself (Francisco Casas B.)
+and are dedicated to the Public Domain
+https://creativecommons.org/publicdomain/zero/1.0/
 
-See packs/16x16-Emoji-Pack
