@@ -43,7 +43,6 @@ typedef enum GameScreen {
 //----------------------------------------------------------------------------------
 extern GameScreen currentScreen;
 extern Font font;
-extern Music music;
 extern Sound fxCoin;
 
 #ifdef __cplusplus

@@ -30,8 +30,11 @@
 //----------------------------------------------------------------------------------
 GameScreen currentScreen = 0;
 Font font = { 0 };
-Music music = { 0 };
+Music music[4] = { 0 };
 Sound fxCoin = { 0 };
+
+static int currentMusic = -1;
+static int nextMusic = 0; // Change this variable to change the music
 
 //----------------------------------------------------------------------------------
 // Local Variables Definition (local to this module)
@@ -72,11 +75,12 @@ int main(void)
 
     // Load global data (assets that must be available in all screens, i.e. font)
     font = LoadFont("resources/mecha.png");
-    music = LoadMusicStream("resources/ambient.ogg");
     fxCoin = LoadSound("resources/coin.wav");
 
-    SetMusicVolume(music, 0.0f);
-    PlayMusicStream(music);
+    music[0] = LoadMusicStream("resources/music/gothamlicious-32.mp3");
+    music[1] = LoadMusicStream("resources/music/ether_vox-32.mp3");
+    music[2] = LoadMusicStream("resources/music/night_vigil-32.mp3");
+    music[3] = LoadMusicStream("resources/music/hot_pursuit-32.mp3");
 
     // Setup and init first screen
     #ifdef _DEBUG
@@ -115,7 +119,10 @@ int main(void)
 
     // Unload global data loaded
     UnloadFont(font);
-    UnloadMusicStream(music);
+    UnloadMusicStream(music[0]);
+    UnloadMusicStream(music[1]);
+    UnloadMusicStream(music[2]);
+    UnloadMusicStream(music[3]);
     UnloadSound(fxCoin);
 
     CloseAudioDevice();     // Close audio context
@@ -231,7 +238,16 @@ static void UpdateDrawFrame(void)
 {
     // Update
     //----------------------------------------------------------------------------------
-    UpdateMusicStream(music);       // NOTE: Music keeps playing between screens
+    if (currentMusic != nextMusic)
+    {
+        if (currentMusic != -1)
+            StopMusicStream(music[currentMusic]);
+
+        currentMusic = nextMusic;
+        PlayMusicStream(music[currentMusic]);
+        SetMusicVolume(music[currentMusic], 1.0f);
+    }
+    UpdateMusicStream(music[currentMusic]);       // NOTE: Music keeps playing between screens
 
     if (!onTransition)
     {
@@ -239,6 +255,10 @@ static void UpdateDrawFrame(void)
         {
             case GAMESCREEN_LOGO:
             {
+                nextMusic = 0;
+
+                // Faster!
+                UpdateLogoScreen();
                 UpdateLogoScreen();
 
                 if (FinishLogoScreen()) TransitionToScreen(GAMESCREEN_TITLE);
@@ -246,6 +266,7 @@ static void UpdateDrawFrame(void)
             } break;
             case GAMESCREEN_TITLE:
             {
+                nextMusic = 0;
                 UpdateTitleScreen();
 
                 if (FinishTitleScreen() == 1) TransitionToScreen(GAMESCREEN_OPTIONS);
@@ -254,6 +275,7 @@ static void UpdateDrawFrame(void)
             } break;
             case GAMESCREEN_OPTIONS:
             {
+                nextMusic = 0;
                 UpdateOptionsScreen();
 
                 if (FinishOptionsScreen()) TransitionToScreen(GAMESCREEN_TITLE);
@@ -261,6 +283,10 @@ static void UpdateDrawFrame(void)
             } break;
             case GAMESCREEN_GAMEPLAY:
             {
+                nextMusic = 1;
+                if (currentLevel > N_LEVELS/2) nextMusic = 2;
+                if (currentLevel == N_LEVELS) nextMusic = 3;
+
                 UpdateGameplayScreen();
 
                 int result = FinishGameplayScreen();
@@ -283,6 +309,7 @@ static void UpdateDrawFrame(void)
             } break;
             case GAMESCREEN_ENDING:
             {
+                nextMusic = 0;
                 UpdateEndingScreen();
 
                 if (FinishEndingScreen() == 1) TransitionToScreen(GAMESCREEN_TITLE);
