@@ -272,8 +272,10 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
     }
     // Timers
     ent->timeAlive++;
-    ent->cooldown -= (ent->status != STATUS_ASTONISHED);
+    ent->cooldown -= (ent->status != STATUS_ASTONISHED && ent->status != STATUS_LAUGH);
     ent->cooldown -= 3*(ent->status == STATUS_ANGRY);
+    ent->cooldown -= 2*(ent->status == STATUS_CEO);
+    ent->cooldown -= 3*(ent->status == STATUS_CRAZY);
 
     { // Status particles
         if (ent->status == STATUS_ONFIRE)
@@ -281,19 +283,24 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
     }
 
     { // Status control
-        if (ent->status == STATUS_ONFIRE && ent->statusTime >= 100)
+        if (ent->status == STATUS_ONFIRE)
         {
-            ent->terminate = 1;
+            if (ent->statusTime >= 100) ent->terminate = 1;
         }
-        else if (ent->status == STATUS_FROZEN && ent->statusTime >= 1000)
+        else if (ent->status == STATUS_FROZEN || ent->status == STATUS_CEO)
         {
-            ent->status = STATUS_NORMAL;
-            ent->statusTime = 0;
+            if (ent->statusTime >= 1000){
+                ent->status = STATUS_NORMAL;
+                ent->statusTime = 0;
+            }
         }
-        else if (ent->status != STATUS_NORMAL && ent->status != STATUS_FREE && ent->statusTime >= 600)
+        else if (ent->status != STATUS_NORMAL && ent->status != STATUS_FREE && ent->status != STATUS_LOOSE)
         {
-            ent->status = STATUS_NORMAL;
-            ent->statusTime = 0;
+            if (ent->statusTime >= 600)
+            {
+                ent->status = STATUS_NORMAL;
+                ent->statusTime = 0;
+            }
         }
         ent->statusTime++;
 
@@ -302,6 +309,11 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             ent->body.vx = 0;
             ent->body.vy = 0;
             return;
+        }
+        if (ent->status == STATUS_CRAZY || (ent->status == STATUS_LOOSE && ent->timeAlive%150 == 0))
+        {
+            ent->lookX = ent->body.x + rand()%301 - 150;
+            ent->lookY = ent->body.y + rand()%301 - 150;
         }
     }
 
@@ -354,10 +366,14 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                     .vy = ent->lookY - ent->body.y,
                     .rad = 0.3*TS,
                 };
+
+
                 if (BodySetSpeed(&body, SPELL_SPEED) == 1)
                 {
                     Entity *attack = StateAddEntity(state, TYPE_SPELL, 0, body);
                     attack->spell = state->wand.spell;
+                    if (attack->spell.type == SPELLTYPE_LOL)
+                        attack->body.rad *= 2;
 
                     state->wand.signal = WANDSIGNAL_SPELL;
                     state->wand.signalIntensity = 1.0;
@@ -380,7 +396,15 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 colli = colli || other->type == TYPE_MAGE;
                 if (colli && BodyDistance(ent->body, other->body) < -ent->body.rad/3)
                 {
-                    ent->terminate = 1;
+                    if (other->powerChar == '$')
+                    {
+                        ent->coins += 100;
+                        other->terminate = 1;
+                    }
+                    else
+                    {
+                        ent->terminate = 1;
+                    }
                 }
             }
             break;
@@ -393,8 +417,11 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                     (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE || ent->status == STATUS_ANGRY) &&
                     LineOfSight(state->level, ent->body, player->body))
             {
-                ent->lookX = player->body.x;
-                ent->lookY = player->body.y;
+                if (ent->status != STATUS_CRAZY && ent->status != STATUS_LOOSE)
+                {
+                    ent->lookX = player->body.x;
+                    ent->lookY = player->body.y;
+                }
                 if (ent->cooldown < 0)
                 { // Shoot
 
@@ -417,10 +444,12 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         .rad = 0.85*ent->body.rad,
                     };
                     BodyLimitSpeed(&body, 2.0);
-                    StateAddEntity(state, TYPE_PROJECTILE, ent->powerChar, body);
+                    char powerChar = ent->powerChar;
+                    if (ent->status == STATUS_CEO) powerChar = '$';
+                    StateAddEntity(state, TYPE_PROJECTILE, powerChar, body);
                 }
             }
-            if (ent->status == STATUS_FREE)
+            if (ent->status == STATUS_FREE || ent->status == STATUS_LOOSE)
                 BodyMoveTowards(&ent->body, ent->lookX, ent->lookY, 0.7);
             break;
         }
@@ -428,14 +457,15 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
         case TYPE_CHOMP:
         {
             const Entity *player = StateGetPlayer(state);
-            if (player && LineOfSight(state->level, ent->body, player->body))
+            if (player && LineOfSight(state->level, ent->body, player->body)
+                    && ent->status != STATUS_CRAZY && ent->status != STATUS_LOOSE)
             {
                 ent->lookX = player->body.x;
                 ent->lookY = player->body.y;
             }
             BodyMoveTowards(&ent->body, ent->lookX, ent->lookY, (ent->status != STATUS_NORMAL)? 0.4 : 4);
 
-            if (ent->status != STATUS_FREE)
+            if (ent->status != STATUS_FREE && ent->status != STATUS_LOOSE)
             {
                 float deltaXini = ent->body.x - ent->initialBody.x;
                 float deltaYini = ent->body.y - ent->initialBody.y;
@@ -519,10 +549,73 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                             other->body.rad += 4;
                             break;
                         }
+                        case SPELLTYPE_LESS:
+                        {
+                            ent->terminate = 1;
+                            other->status = STATUS_ASTONISHED;
+                            other->statusTime = 0;
+                            other->body.rad *= 0.9;
+                            if (other->body.rad < 3) other->terminate = 1;
+                            break;
+                        }
+                        case SPELLTYPE_SELL:
+                        {
+                            ent->terminate = 1;
+                            other->terminate = 1;
+                            Entity *player = StateGetPlayer(state);
+                            if (player)
+                                player->coins += 100*other->body.rad;
+                            AddStateExplosion(state, 100, YELLOW, '$', other->body.x, other->body.y, other->body.rad);
+                            break;
+                        }
+                        case SPELLTYPE_CELL:
+                        {
+                            ent->terminate = 1;
+                            other->body.rad *= 0.8;
+                            float angle = 2*M_PI*rand()/(float)RAND_MAX;
+                            Body body2 = other->body;
+                            body2.x += 2*other->body.rad*cosf(angle);
+                            body2.y += 2*other->body.rad*sinf(angle);
+                            other->body.x -= 2*other->body.rad*cosf(angle);
+                            other->body.y -= 2*other->body.rad*sinf(angle);
+                            other->initialBody = other->body;
+                            if (other->body.rad < 3)
+                                other->terminate = 1;
+                            else
+                                StateAddEntity(state, other->type, other->powerChar, body2);
+                            break;
+                        }
                         case SPELLTYPE_FREE:
                         {
                             ent->terminate = 1;
                             other->status = STATUS_FREE;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        case SPELLTYPE_LOL:
+                        {
+                            other->status = STATUS_LAUGH;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        case SPELLTYPE_CEO:
+                        {
+                            ent->terminate = 1;
+                            other->status = STATUS_CEO;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        case SPELLTYPE_LOCO:
+                        {
+                            ent->terminate = 1;
+                            other->status = STATUS_CRAZY;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        case SPELLTYPE_LOOSE:
+                        {
+                            ent->terminate = 1;
+                            other->status = STATUS_LOOSE;
                             other->statusTime = 0;
                             break;
                         }
@@ -533,6 +626,9 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                     }
                 }
             }
+
+            if (ent->spell.type == SPELLTYPE_SEE && ent->timeAlive > 40)
+                ent->terminate = 1;
 
             if (LevelCellIsSolid(floor))
                 ent->terminate = 1;
@@ -555,7 +651,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             }
 
             // Distract other entities
-            if (ent->spell.type == SPELLTYPE_REFER && ent->terminate == 1)
+            if ((ent->spell.type == SPELLTYPE_REFER || ent->spell.type == SPELLTYPE_SEE) && ent->terminate == 1)
             {
                 for(int i = 0; i < state->entsN; i++)
                 {
@@ -569,6 +665,25 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                             other->lookX = ent->body.x;
                             other->lookY = ent->body.y;
                         }
+                    }
+                }
+            }
+            // TP the player
+            if (ent->spell.type == SPELLTYPE_ELSE)
+            {
+                if (floor == ' ')
+                {
+                    ent->initialBody.x = (cellX + 0.5)*TS;
+                    ent->initialBody.y = (cellY + 0.5)*TS;
+                }
+
+                if (ent->terminate)
+                {
+                    Entity *player = StateGetPlayer(state);
+                    if (player)
+                    {
+                        player->body.x = ent->initialBody.x;
+                        player->body.y = ent->initialBody.y;
                     }
                 }
             }
@@ -644,7 +759,7 @@ void StateUpdate(State *state, int process_pressed_keys)
             for (int i = 0; i < state->entsN; i++)
             {
                 Entity *ent = &state->ents[i];
-                if (ent->powerChar == 0)
+                if (ent->powerChar == 0 || ent->powerChar == '$')
                     continue;
                 if (state->wand.absorbingChar != 0 && state->wand.absorbingChar != ent->powerChar)
                     continue;

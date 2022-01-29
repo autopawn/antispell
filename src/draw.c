@@ -17,7 +17,7 @@ static Texture2D bunnyTexture[2];
 static Texture2D flowerTexture[2];
 static Texture2D chompTexture[3];
 static Texture2D spellTexture;
-static Texture2D bubbleTexture[3];
+static Texture2D bubbleTexture[5];
 static Texture2D tileTexture[4];
 
 void DrawLoadResources()
@@ -37,6 +37,8 @@ void DrawLoadResources()
     bubbleTexture[0] = LoadTexture("resources/sprites/bubble_angry.png");
     bubbleTexture[1] = LoadTexture("resources/sprites/bubble_look.png");
     bubbleTexture[2] = LoadTexture("resources/sprites/bubble_eat.png");
+    bubbleTexture[3] = LoadTexture("resources/sprites/bubble_laugh.png");
+    bubbleTexture[4] = LoadTexture("resources/sprites/bubble_crazy.png");
     tileTexture[0] = LoadTexture("resources/tilesets/stairs_Delapouite.png");
     tileTexture[1] = LoadTexture("resources/tilesets/fire-zone_Lorc.png");
     tileTexture[2] = LoadTexture("resources/tilesets/wood-pile_Delapouite.png");
@@ -60,6 +62,8 @@ void DrawUnloadResources()
     UnloadTexture(bubbleTexture[0]);
     UnloadTexture(bubbleTexture[1]);
     UnloadTexture(bubbleTexture[2]);
+    UnloadTexture(bubbleTexture[3]);
+    UnloadTexture(bubbleTexture[4]);
     UnloadTexture(tileTexture[0]);
     UnloadTexture(tileTexture[1]);
     UnloadTexture(tileTexture[2]);
@@ -70,6 +74,7 @@ static Color GetStatusColor(EntityStatus status)
 {
     if (status == STATUS_FROZEN) return SKYBLUE;
     if (status == STATUS_ONFIRE) return RED;
+    if (status == STATUS_CEO) return DARKGRAY;
     return WHITE;
 }
 
@@ -315,6 +320,8 @@ void DrawState(State *state, DrawLayer layer){
             if (ent->status == STATUS_ANGRY)      textureId = 0;
             if (ent->status == STATUS_ASTONISHED) textureId = 1;
             if (ent->status == STATUS_YUMMY)      textureId = 2;
+            if (ent->status == STATUS_LAUGH)      textureId = 3;
+            if (ent->status == STATUS_CRAZY)      textureId = 4;
             if (textureId >= 0)
             {
                 DrawTexture(bubbleTexture[textureId], ent->body.x + ent->body.rad/2,
