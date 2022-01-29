@@ -152,7 +152,7 @@ void UpdateEndingScreen(void)
     }
 
     // Press enter or tap to return to TITLE screen
-    if (endingTextP[0] == '\0' && IsKeyPressed(KEY_ENTER))
+    if (framesCounter > 100 && IsKeyPressed(KEY_ENTER))
     {
         finishScreen = 1;
         PlaySound(fxCoin);

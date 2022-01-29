@@ -164,6 +164,26 @@ void DrawTitleScreen(void)
         FONT_SIZE = 12;
         Color copyrightColor = ORANGE;
         DrawText("© Francisco Casas 2022", 4, screenH - FONT_SIZE - 4, FONT_SIZE, copyrightColor);
+
+        if ((framesCounter-PHASE4)%160 < 8)
+        {
+            float antimageW = antimageTexture.width*antimageScale;
+            float antimageH = antimageTexture.height*antimageScale;
+            Rectangle eyeBox = {
+                antimageX + 0.53*antimageW,
+                antimageY + 0.32*antimageH,
+                0.14*antimageW,
+                0.04*antimageH,
+            };
+            Rectangle eyeBox2 = {
+                antimageX + 0.53*antimageW,
+                antimageY + 0.37*antimageH,
+                0.14*antimageW,
+                0.05*antimageH,
+            };
+            DrawRectangleRec(eyeBox, BLACK);
+            DrawRectangleRec(eyeBox2, BLACK);
+        }
     }
 }
 
