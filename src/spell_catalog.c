@@ -3,9 +3,12 @@
 static Color POWERCHAR_COLOR[256] = {
     ['I'] = ORANGE,
     ['C'] = BLUE,
+    ['L'] = PURPLE,
     ['R'] = BROWN,
     ['E'] = GREEN,
     ['F'] = ORANGE,
+    ['O'] = GRAY,
+    ['S'] = PINK,
     ['$'] = YELLOW,
 };
 

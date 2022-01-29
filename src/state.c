@@ -104,6 +104,9 @@ State *StateLoadFromFile(const char *fname)
             if (cell=='R') StateAddEntity(state, TYPE_CHOMP, 'R', body);
             if (cell=='E') StateAddEntity(state, TYPE_MAGE, 'E', body);
             if (cell=='F') StateAddEntity(state, TYPE_MAGE, 'F', body);
+            if (cell=='L') StateAddEntity(state, TYPE_MAGE, 'L', body);
+            if (cell=='O') StateAddEntity(state, TYPE_MAGE, 'O', body);
+            if (cell=='S') StateAddEntity(state, TYPE_FLOWER, 'S', body);
         }
     }
 
@@ -452,6 +455,12 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         ent->lookX += rand()%201 - 100;
                         ent->lookY += rand()%201 - 100;
                     }
+                    else if (ent->powerChar == 'L')
+                    {
+                        ent->cooldown = 300;
+                        ent->lookX += rand()%101 - 50;
+                        ent->lookY += rand()%101 - 50;
+                    }
                     else
                     {
                         ent->cooldown = 200;
@@ -464,6 +473,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         .vy = ent->lookY - ent->body.y,
                         .rad = 0.85*ent->body.rad,
                     };
+                    if (ent->powerChar == 'O')
+                        body.rad *= 4;
                     BodyLimitSpeed(&body, 2.0);
                     if (ent->status == STATUS_COOL)
                         BodyLimitSpeed(&body, 0.5);
@@ -506,8 +517,24 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
 
         case TYPE_PROJECTILE:
         {
-            if (colliding)
-                ent->terminate = 1;
+
+            if (ent->powerChar == 'L')
+            {
+                Entity *player = StateGetPlayer(state);
+                if (player)
+                {
+                    BodyAccelTowards(&ent->body, player->body.x, player->body.y, 0.02, 2);
+                }
+                if (ent->timeAlive > 600) ent->terminate = 1;
+            }
+            else if (ent->powerChar == 'O')
+            {
+                if (ent->timeAlive > 500) ent->terminate = 1;
+            }
+            else
+            {
+                if (colliding) ent->terminate = 1;
+            }
             break;
         }
 
@@ -687,6 +714,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                             ent->terminate = 1;
                             other->status = STATUS_MUTE;
                             other->statusTime = 0;
+                            other->cooldown = 100;
                             break;
                         }
                         case SPELLTYPE_SOLO:
