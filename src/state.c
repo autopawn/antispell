@@ -21,16 +21,19 @@ static const int TS = LEVEL_TILE_SIZE;
 
 static Sound wandBellSfx;
 static Sound damageSfx;
+static Sound stairsSfx;
 
 void StateLoadResources(){
     wandBellSfx = LoadSound("resources/sfx/wand_bell.wav");
     damageSfx = LoadSound("resources/sfx/damage.wav");
+    stairsSfx = LoadSound("resources/sfx/stairs.wav");
 }
 
 void StateUnloadResources()
 {
     UnloadSound(wandBellSfx);
     UnloadSound(damageSfx);
+    UnloadSound(stairsSfx);
 }
 
 static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Body body)
@@ -1007,6 +1010,7 @@ void StateUpdate(State *state, int processPressedKeys)
             {
                 state->result = STATERESULT_NEXTLEVEL;
                 state->resultTime = 0;
+                PlaySound(stairsSfx);
             }
         }
     }
