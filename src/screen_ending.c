@@ -30,9 +30,10 @@
 #include <assert.h>
 
 #include "screens.h"
-
-
+#include "custom_raylib.h"
 #include "spell_catalog.h"
+
+
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -168,9 +169,10 @@ void DrawEndingScreen(void)
 
     DrawRectangle(0, 0, screenW, screenH, BLACK);
     DrawCircleGradient(screenW/2, screenH/2, screenW*0.7, DARKGRAY, BLACK);
-    DrawTextureTiled(floorTextureCredits,
-        (Rectangle){0, 0, floorTextureCredits.width, floorTextureCredits.height},
-        (Rectangle){0, 0, screenW, screenH}, (Vector2){0,0}, 0, 1, WHITE);
+
+    DrawTextureTiledFill(floorTextureCredits,
+            (Rectangle){0, 0, floorTextureCredits.width, floorTextureCredits.height},
+            (Vector2){0, 0}, WHITE);
 
     const int FONT_SIZE = 20;
 

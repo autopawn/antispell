@@ -31,6 +31,7 @@
 #include "screens.h"
 #include "state.h"
 #include "draw.h"
+#include "custom_raylib.h"
 
 
 const float HLEV_ZOOM_MULT = 1.04;
@@ -128,9 +129,9 @@ void DrawGameplayScreen(void)
         DrawState(state, LAYER0_RUG);
     EndMode2D();
 
-    DrawTextureTiled(floorTexture,
-        (Rectangle){cam.target.x*cam.zoom, cam.target.y*cam.zoom, floorTexture.width, floorTexture.height},
-        (Rectangle){0, 0, screenW, screenH}, (Vector2){0,0}, 0, 1, WHITE);
+    DrawTextureTiledFill(floorTexture,
+        (Rectangle){0, 0, floorTexture.width, floorTexture.height},
+        (Vector2){-cam.target.x*cam.zoom, -cam.target.y*cam.zoom}, WHITE);
 
     cam.zoom = 1.0 / HLEV_ZOOM_MULT;
     BeginMode2D(cam);
@@ -164,14 +165,14 @@ void UnloadGameplayScreen(void)
 // Gameplay Screen should finish?
 int FinishGameplayScreen(void)
 {
-    if (state->result == STATERESULT_NEXTLEVEL && state->resultTime > 30)
+    if (state->result == STATERESULT_NEXTLEVEL && state->resultTime > 100)
     {
         Entity *player = StateGetPlayer(state);
         if (player)
             coinsCollected += player->coins;
         return 2;
     }
-    if (state->result == STATERESULT_RETRY && state->resultTime > 30)
+    if (state->result == STATERESULT_RETRY && state->resultTime > 100)
     {
         Entity *player = StateGetPlayer(state);
         if (player)

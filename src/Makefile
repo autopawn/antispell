@@ -390,6 +390,7 @@ PROJECT_SOURCE_FILES ?= \
     state.c \
     draw.c \
     spell_catalog.c \
+    custom_raylib.c \
     physics.c
 
 # Define all object files from source files

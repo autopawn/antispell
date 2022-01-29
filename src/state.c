@@ -10,7 +10,7 @@
 #include "spell_catalog.h"
 
 static const float WAND_RADIOUS = 30;
-static const int WAND_ABSORV_TIME = 25;
+static const int WAND_ABSORV_TIME = 20;
 
 static const float ENEMY_VISION_RANGE = 300;
 
@@ -168,6 +168,31 @@ static void AddExplosion(Entity *ent, int nParticles, Color col, char character)
     }
 }
 
+static void AddStateExplosion(State *state, int nParticles, Color col, char character,
+        float x, float y, float rad)
+{
+    if (nParticles > MAX_STATE_PARTICLES)
+        nParticles = MAX_STATE_PARTICLES;
+    for (int i = 0; i < nParticles; i++)
+    {
+        const float MAX_PARTICLE_SPD = 1.0;
+        Particle part = {0};
+        part.body.x = x;
+        part.body.y = y;
+        part.body.vx = (rand()%101 - 50)/50.0 * MAX_PARTICLE_SPD;
+        part.body.vy = (rand()%101 - 50)/50.0 * MAX_PARTICLE_SPD;
+        BodyLimitSpeed(&part.body, MAX_PARTICLE_SPD);
+        part.body.x += part.body.vx*0.7*rad/MAX_PARTICLE_SPD;
+        part.body.y += part.body.vy*0.7*rad/MAX_PARTICLE_SPD;
+        part.body.rad = 6;
+        part.character = character;
+        part.color = col;
+        part.above = 1;
+        part.lifeTime = 40 + rand()%40;
+        AddParticle(state->particles, &state->particlesN, MAX_STATE_PARTICLES, part);
+    }
+}
+
 static void UpdateParticleList(Particle *parts, int *partsN)
 {
     int particlesN2 = 0;
@@ -233,7 +258,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
     }
 
     { // Status control
-        if (ent->status == STATUS_ONFIRE && ent->statusTime >= 400)
+        if (ent->status == STATUS_ONFIRE && ent->statusTime >= 100)
         {
             ent->terminate = 1;
         }
@@ -321,6 +346,19 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
 
             if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 ent->attackCalled = 1;
+
+            for(int i = 0; i < state->entsN; i++)
+            {
+                Entity *other = &state->ents[i];
+                int colli = 0;
+                colli = colli || other->type == TYPE_PROJECTILE;
+                colli = colli || other->type == TYPE_CHOMP;
+                colli = colli || other->type == TYPE_MAGE;
+                if (colli && BodyDistance(ent->body, other->body) < -ent->body.rad/3)
+                {
+                    ent->terminate = 1;
+                }
+            }
             break;
         }
 
@@ -431,7 +469,6 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                             ent->terminate = 1;
                             if (other->type == TYPE_MAGE || other->type == TYPE_CHOMP)
                             {
-                                Entity *player = StateGetPlayer(state);
                                 other->status = STATUS_ANGRY;
                                 other->statusTime = 0;
                                 int coins_lost = 0;
@@ -441,6 +478,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                                     coins_lost = 1000;
                                 if (other->coins < coins_lost)
                                     coins_lost = other->coins;
+
+                                Entity *player = StateGetPlayer(state);
                                 other->coins -= coins_lost;
                                 if (player)
                                     player->coins += coins_lost;
@@ -536,6 +575,11 @@ void StateUpdate(State *state, int process_pressed_keys)
                 particle.body.x += ent->body.x;
                 particle.body.y += ent->body.y;
                 AddParticle(state->particles, &state->particlesN, MAX_STATE_PARTICLES, particle);
+            }
+
+            if (ent->type == TYPE_PLAYER)
+            {
+                AddStateExplosion(state, 100, GRAY, '@', ent->body.x, ent->body.y, ent->body.rad);
             }
         }
         else
@@ -633,6 +677,11 @@ void StateUpdate(State *state, int process_pressed_keys)
             if (ent->type == TYPE_PLAYER)     slowFactor = 0.8;
             if (ent->type == TYPE_SPELL)      slowFactor = 0.8;
             if (ent->type == TYPE_PROJECTILE) slowFactor = 0.3;
+        }
+        else if (floor == 'l' && ent->status < STATUS_ONFIRE)
+        {
+            ent->status = STATUS_ONFIRE;
+            ent->statusTime = 0;
         }
         // Update physics
         int colliding = UpdateBody((ent->type == TYPE_SPELL)? NULL : state->level,
