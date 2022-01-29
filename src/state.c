@@ -410,6 +410,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
 
             if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 ent->attackCalled = 1;
+            if (IsKeyPressed(KEY_R))
+                ent->terminate = 1;
 
             for(int i = 0; i < state->entsN; i++)
             {

@@ -19,6 +19,7 @@ A top-down shooter where you have to use your enemies' attacks to spell your spe
 
 Keyboard:
  - W, A, S, D to move
+ - R to restart.
 
 Mouse:
  - Move the mouse to look/aim.
