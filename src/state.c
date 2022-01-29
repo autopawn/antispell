@@ -57,6 +57,8 @@ static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Bod
         ent->coins = 10000;
     if (ent->type == TYPE_CHOMP)
         ent->coins =  2000;
+    ent->lookX = ent->initialBody.x;
+    ent->lookY = ent->initialBody.y;
 
     return ent;
 }

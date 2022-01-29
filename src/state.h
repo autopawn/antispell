@@ -21,7 +21,7 @@ typedef enum {
 } EntityType;
 
 typedef enum {
-    STATUS_NORMAL,
+    STATUS_NORMAL = 0,
     STATUS_YUMMY,
     STATUS_LAUGH,
     STATUS_SAD,

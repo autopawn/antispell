@@ -43,6 +43,10 @@ Greetings from 🇨🇱!
  - YouTube Gameplay: $(YouTube Link)
  - itch.io Release: $(itch.io Game Page) -->
 
+### Thanks
+
+Sound effects made using https://sfbgames.itch.io/chiptone and https://raylibtech.itch.io/rfxgen
+
 ### License
 
 This game sources are licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.

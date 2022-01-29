@@ -25,7 +25,7 @@
 #ifdef _DEBUG
     #define N_LEVELS 1
 #else
-    #define N_LEVELS 3
+    #define N_LEVELS 5
 #endif
 
 //----------------------------------------------------------------------------------
