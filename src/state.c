@@ -20,14 +20,17 @@ static const float SPELL_SPEED = 4.0;
 static const int TS = LEVEL_TILE_SIZE;
 
 static Sound wandBellSfx;
+static Sound damageSfx;
 
 void StateLoadResources(){
     wandBellSfx = LoadSound("resources/sfx/wand_bell.wav");
+    damageSfx = LoadSound("resources/sfx/damage.wav");
 }
 
 void StateUnloadResources()
 {
     UnloadSound(wandBellSfx);
+    UnloadSound(damageSfx);
 }
 
 static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Body body)
@@ -874,6 +877,7 @@ void StateUpdate(State *state, int processPressedKeys)
             if (ent->type == TYPE_PLAYER)
             {
                 AddStateExplosion(state, 100, GRAY, '@', ent->body.x, ent->body.y, ent->body.rad);
+                PlaySound(damageSfx);
             }
         }
         else
