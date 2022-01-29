@@ -272,7 +272,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
     }
     // Timers
     ent->timeAlive++;
-    ent->cooldown -= (ent->status != STATUS_ASTONISHED && ent->status != STATUS_LAUGH);
+    ent->cooldown -= (ent->status != STATUS_ASTONISHED && ent->status != STATUS_LAUGH && ent->status != STATUS_COOL);
+    ent->cooldown -= (ent->status == STATUS_COOL)*(rand()%4==0);
     ent->cooldown -= 3*(ent->status == STATUS_ANGRY);
     ent->cooldown -= 2*(ent->status == STATUS_CEO);
     ent->cooldown -= 3*(ent->status == STATUS_CRAZY);
@@ -294,7 +295,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 ent->statusTime = 0;
             }
         }
-        else if (ent->status != STATUS_NORMAL && ent->status != STATUS_FREE && ent->status != STATUS_LOOSE)
+        else if (ent->status != STATUS_NORMAL && ent->status != STATUS_FREE
+            && ent->status != STATUS_LOOSE && ent->status != STATUS_COOL)
         {
             if (ent->statusTime >= 600)
             {
@@ -315,6 +317,12 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             ent->lookX = ent->body.x + rand()%301 - 150;
             ent->lookY = ent->body.y + rand()%301 - 150;
         }
+    }
+
+    if (ent->status == STATUS_COOL)
+    {
+        ent->body.x += rand()%3 - 1;
+        ent->body.y += rand()%3 - 1;
     }
 
     // Current cell
@@ -444,6 +452,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         .rad = 0.85*ent->body.rad,
                     };
                     BodyLimitSpeed(&body, 2.0);
+                    if (ent->status == STATUS_COOL)
+                        BodyLimitSpeed(&body, 0.5);
                     char powerChar = ent->powerChar;
                     if (ent->status == STATUS_CEO) powerChar = '$';
                     StateAddEntity(state, TYPE_PROJECTILE, powerChar, body);
@@ -619,6 +629,26 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                             other->statusTime = 0;
                             break;
                         }
+                        case SPELLTYPE_LOSS:
+                        {
+                            ent->terminate = 1;
+                            other->terminate = 1;
+                            AddStateExplosion(state, 30, DARKGRAY, '?',
+                                    other->body.x, other->body.y, other->body.rad);
+                            int otherCellX = other->body.x/TS;
+                            int otherCellY = other->body.y/TS;
+                            char otherFloor = LevelGetAt(state->level, otherCellY, otherCellX);
+                            if (!LevelCellIsSolid(otherFloor) && otherFloor != '$')
+                                state->level->cells[otherCellY][otherCellX] = 'o';
+                            break;
+                        }
+                        case SPELLTYPE_COOL:
+                        {
+                            ent->terminate = 1;
+                            other->status = STATUS_COOL;
+                            other->statusTime = 0;
+                            break;
+                        }
                         default:
                         {
                             break;
@@ -633,7 +663,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             if (LevelCellIsSolid(floor))
                 ent->terminate = 1;
             // Froze lava floor
-            if (ent->spell.type == SPELLTYPE_ICE && floor == 'l')
+            if ((ent->spell.type == SPELLTYPE_ICE || ent->spell.type == SPELLTYPE_COOL) && floor == 'l')
             {
                 state->level->cells[cellY][cellX] = 'a'; // ashes
                 ent->terminate = 1;

@@ -17,8 +17,8 @@ static Texture2D bunnyTexture[2];
 static Texture2D flowerTexture[2];
 static Texture2D chompTexture[3];
 static Texture2D spellTexture;
-static Texture2D bubbleTexture[5];
-static Texture2D tileTexture[4];
+static Texture2D bubbleTexture[6];
+static Texture2D tileTexture[5];
 
 void DrawLoadResources()
 {
@@ -39,10 +39,12 @@ void DrawLoadResources()
     bubbleTexture[2] = LoadTexture("resources/sprites/bubble_eat.png");
     bubbleTexture[3] = LoadTexture("resources/sprites/bubble_laugh.png");
     bubbleTexture[4] = LoadTexture("resources/sprites/bubble_crazy.png");
+    bubbleTexture[5] = LoadTexture("resources/sprites/bubble_cool.png");
     tileTexture[0] = LoadTexture("resources/tilesets/stairs_Delapouite.png");
     tileTexture[1] = LoadTexture("resources/tilesets/fire-zone_Lorc.png");
     tileTexture[2] = LoadTexture("resources/tilesets/wood-pile_Delapouite.png");
     tileTexture[3] = LoadTexture("resources/tilesets/coral_Delapouite.png");
+    tileTexture[4] = LoadTexture("resources/tilesets/loss.png");
 }
 
 void DrawUnloadResources()
@@ -64,17 +66,20 @@ void DrawUnloadResources()
     UnloadTexture(bubbleTexture[2]);
     UnloadTexture(bubbleTexture[3]);
     UnloadTexture(bubbleTexture[4]);
+    UnloadTexture(bubbleTexture[5]);
     UnloadTexture(tileTexture[0]);
     UnloadTexture(tileTexture[1]);
     UnloadTexture(tileTexture[2]);
     UnloadTexture(tileTexture[3]);
+    UnloadTexture(tileTexture[4]);
 }
 
 static Color GetStatusColor(EntityStatus status)
 {
     if (status == STATUS_FROZEN) return SKYBLUE;
     if (status == STATUS_ONFIRE) return RED;
-    if (status == STATUS_CEO) return DARKGRAY;
+    if (status == STATUS_CEO)    return DARKGRAY;
+    if (status == STATUS_COOL)   return SKYBLUE;
     return WHITE;
 }
 
@@ -130,6 +135,15 @@ static void DrawLevel(Level *level, DrawLayer layer)
                     if (layer == LAYER1_FLOOR)
                         DrawTexturePro(tileTexture[1], textureSrc(&tileTexture[1]), rect2,
                                 (Vector2){0,0}, 0, transp(MAROON));
+                    break;
+                }
+                case 'o':
+                {
+                    if (layer == LAYER0_RUG)
+                        DrawRectangleRec(rect, LIGHTGRAY);
+                    if (layer == LAYER1_FLOOR)
+                        DrawTexturePro(tileTexture[4], textureSrc(&tileTexture[4]), rect2,
+                                (Vector2){0,0}, 0, transp(LIGHTGRAY));
                     break;
                 }
                 case 'a':
@@ -322,6 +336,7 @@ void DrawState(State *state, DrawLayer layer){
             if (ent->status == STATUS_YUMMY)      textureId = 2;
             if (ent->status == STATUS_LAUGH)      textureId = 3;
             if (ent->status == STATUS_CRAZY)      textureId = 4;
+            if (ent->status == STATUS_COOL)       textureId = 5;
             if (textureId >= 0)
             {
                 DrawTexture(bubbleTexture[textureId], ent->body.x + ent->body.rad/2,
