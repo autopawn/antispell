@@ -433,7 +433,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 ent->lookX = player->body.x;
                 ent->lookY = player->body.y;
             }
-            BodyMoveTowards(&ent->body, ent->lookX, ent->lookY, (ent->status == STATUS_FREE)? 0.4 : 4);
+            BodyMoveTowards(&ent->body, ent->lookX, ent->lookY, (ent->status != STATUS_NORMAL)? 0.4 : 4);
 
             if (ent->status != STATUS_FREE)
             {
