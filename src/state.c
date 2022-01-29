@@ -32,16 +32,15 @@ void StateUnloadResources()
 
 static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Body body)
 {
-    // Extend vector capacity
-    if (state->entsN == state->entsCapacity)
+    if (state->queuedEntsN == state->queuedEntsCapacity)
     {
-        state->entsCapacity *= 2;
-        state->ents = realloc(state->ents, sizeof(Entity) * state->entsCapacity);
-        assert(state->ents != NULL);
+        state->queuedEntsCapacity *= 2;
+        state->queuedEnts = realloc(state->queuedEnts, sizeof(Entity) * state->queuedEntsCapacity);
+        assert(state->queuedEnts != NULL);
     }
 
-    Entity *ent = &state->ents[state->entsN];
-    state->entsN++;
+    Entity *ent = &state->queuedEnts[state->queuedEntsN];
+    state->queuedEntsN++;
     memset(ent, 0, sizeof(Entity));
     ent->type = type;
     ent->initialBody = body;
@@ -53,14 +52,25 @@ static Entity *StateAddEntity(State *state, EntityType type, char powerChar, Bod
     if (ent->type == TYPE_CHOMP)
         ent->coins =  2000;
 
-    switch (ent->type)
-    {
-        default:
-        {
-            break;
-        }
-    }
     return ent;
+}
+
+static void StateUnqueueNewEntities(State *state)
+{
+    for (int i = 0; i < state->queuedEntsN; i++)
+    {
+        // Extend vector capacity
+        if (state->entsN == state->entsCapacity)
+        {
+            state->entsCapacity *= 2;
+            state->ents = realloc(state->ents, sizeof(Entity) * state->entsCapacity);
+            assert(state->ents != NULL);
+        }
+
+        state->ents[state->entsN] = state->queuedEnts[i];
+        state->entsN++;
+    }
+    state->queuedEntsN = 0;
 }
 
 State *StateLoadFromFile(const char *fname)
@@ -74,6 +84,11 @@ State *StateLoadFromFile(const char *fname)
     state->ents = malloc(sizeof(Entity) * state->entsCapacity);
     assert(state->ents != NULL);
     state->entsN = 0;
+
+    state->queuedEntsCapacity = 4;
+    state->queuedEnts = malloc(sizeof(Entity) * state->queuedEntsCapacity);
+    assert(state->queuedEnts != NULL);
+    state->queuedEntsN = 0;
 
     // Add entities from the map
     for (int y = 0; y < state->level->sizeY; y++)
@@ -91,6 +106,8 @@ State *StateLoadFromFile(const char *fname)
             if (cell=='F') StateAddEntity(state, TYPE_MAGE, 'F', body);
         }
     }
+
+    StateUnqueueNewEntities(state);
 
     #ifdef SPELL
         strcpy(state->wand.text, SPELL);
@@ -111,12 +128,18 @@ State *StateCopy(const State *state1)
     assert(state2->ents != NULL);
     memcpy(state2->ents, state1->ents, sizeof(Entity) * state1->entsN);
 
+    state2->queuedEntsN = state1->queuedEntsN;
+    state2->queuedEnts = malloc(sizeof(Entity) * state1->queuedEntsN);
+    assert(state2->queuedEnts != NULL);
+    memcpy(state2->queuedEnts, state1->queuedEnts, sizeof(Entity) * state1->queuedEntsN);
+
     return state2;
 }
 
 void StateFree(State *state)
 {
     free(state->ents);
+    free(state->queuedEnts);
     LevelFree(state->level);
     free(state);
 }
@@ -339,6 +362,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                     state->wand.signal = WANDSIGNAL_SPELL;
                     state->wand.signalIntensity = 1.0;
 
+                    assert(ent != NULL);
                     ent->attackCalled = 0;
                     ent->cooldown = 30;
                 }
@@ -711,6 +735,9 @@ void StateUpdate(State *state, int process_pressed_keys)
             }
         }
     }
+
+    // Move queued entities to real entity array
+    StateUnqueueNewEntities(state);
 
     // Update frame counter
     state->frame++;

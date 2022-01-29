@@ -86,6 +86,10 @@ typedef struct {
     int entsN;
     Entity *ents;
 
+    int queuedEntsCapacity;
+    int queuedEntsN;
+    Entity *queuedEnts;
+
     struct {
         // Words forming in the wand
         char text[MAX_SPELL_LENGHT + 1];
