@@ -645,7 +645,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                             other->status = STATUS_ASTONISHED;
                             other->statusTime = 0;
                             other->body.rad *= 0.9;
-                            if (other->body.rad < 3) other->terminate = 1;
+                            if (other->body.rad < 4) other->terminate = 1;
                             break;
                         }
                         case SPELLTYPE_SELL:
@@ -678,8 +678,11 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         case SPELLTYPE_FREE:
                         {
                             ent->terminate = 1;
-                            other->status = STATUS_FREE;
-                            other->statusTime = 0;
+                            if (other->type != TYPE_HINT)
+                            {
+                                other->status = STATUS_FREE;
+                                other->statusTime = 0;
+                            }
                             break;
                         }
                         case SPELLTYPE_LOL:

@@ -131,7 +131,22 @@ static void DrawLevel(Level *level, DrawLayer layer)
                 case '#':
                 {
                     if (layer == LAYER2_ENTS) DrawRectangleRec(rect, BLACK);
-                    if (layer == LAYER3_WALLS) DrawRectangleRec(rect, GRAY);
+                    if (layer == LAYER3_WALLS)
+                    {
+                        DrawRectangleRec(rect, GRAY);
+                        if (LevelGetAt(level, y - 1, x) != '#')
+                            DrawLineEx((Vector2){rect.x, rect.y},
+                                    (Vector2){rect.x + rect.width, rect.y}, 3, DARKGRAY);
+                        if (LevelGetAt(level, y + 1, x) != '#')
+                            DrawLineEx((Vector2){rect.x, rect.y + rect.height},
+                                    (Vector2){rect.x + rect.width, rect.y + rect.height}, 3, DARKGRAY);
+                        if (LevelGetAt(level, y, x + 1) != '#')
+                            DrawLineEx((Vector2){rect.x + rect.width, rect.y},
+                                    (Vector2){rect.x + rect.width, rect.y + rect.height}, 3, DARKGRAY);
+                        if (LevelGetAt(level, y, x - 1) != '#')
+                            DrawLineEx((Vector2){rect.x, rect.y},
+                                    (Vector2){rect.x, rect.y + rect.height}, 3, DARKGRAY);
+                    }
                     break;
                 }
                 case '~':
@@ -344,23 +359,6 @@ void DrawState(State *state, DrawLayer layer){
                 }
             }
         }
-        if (layer == LAYER3_WALLS)
-        {
-            int textureId = -1;
-            if (ent->status == STATUS_ANGRY)      textureId = 0;
-            if (ent->status == STATUS_ASTONISHED) textureId = 1;
-            if (ent->status == STATUS_YUMMY)      textureId = 2;
-            if (ent->status == STATUS_LAUGH)      textureId = 3;
-            if (ent->status == STATUS_CRAZY)      textureId = 4;
-            if (ent->status == STATUS_COOL)       textureId = 5;
-            if (ent->status == STATUS_SAD)        textureId = 6;
-            if (ent->status == STATUS_MUTE)       textureId = 7;
-            if (textureId >= 0)
-            {
-                DrawTexture(bubbleTexture[textureId], ent->body.x + ent->body.rad/2,
-                       ent->body.y - bubbleTexture[textureId].height - ent->body.rad/2, WHITE);
-            }
-        }
     }
 
 
@@ -386,6 +384,32 @@ void DrawState(State *state, DrawLayer layer){
                 int textW = MeasureText(text, HINT_FONTSIZE);
                 DrawText(text, ent->body.x - textW/2, ent->body.y - 2*HINT_FONTSIZE, HINT_FONTSIZE,
                         WHITE);
+            }
+        }
+    }
+
+    // Draw bubbles
+    if (layer == LAYER3_WALLS)
+    {
+        for (int i = 0; i < state->entsN; i++)
+        {
+            const Entity *ent = &state->ents[i];
+            for (int i = 0; i < state->entsN; i++)
+            {
+                int textureId = -1;
+                if (ent->status == STATUS_ANGRY)      textureId = 0;
+                if (ent->status == STATUS_ASTONISHED) textureId = 1;
+                if (ent->status == STATUS_YUMMY)      textureId = 2;
+                if (ent->status == STATUS_LAUGH)      textureId = 3;
+                if (ent->status == STATUS_CRAZY)      textureId = 4;
+                if (ent->status == STATUS_COOL)       textureId = 5;
+                if (ent->status == STATUS_SAD)        textureId = 6;
+                if (ent->status == STATUS_MUTE)       textureId = 7;
+                if (textureId >= 0)
+                {
+                    DrawTexture(bubbleTexture[textureId], ent->body.x + ent->body.rad/2,
+                        ent->body.y - bubbleTexture[textureId].height - ent->body.rad/2, WHITE);
+                }
             }
         }
     }
