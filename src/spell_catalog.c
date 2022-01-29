@@ -33,9 +33,21 @@ Spell GetSpell(const char *spell)
     for (int i = 0; i < SpellN; i++)
     {
         if (strcmp(spell, SPELL_CATALOG[i].name) == 0)
+        {
+            SPELL_CATALOG[i].used = 1; // Mark as used for the credits
             return SPELL_CATALOG[i];
+        }
     }
     return (Spell){SPELLTYPE_NONE, NULL, (Color){0, 0, 0, 0}};
 }
 
-
+Spell GetSpellFromType(SpellType type)
+{
+    const int SpellN = sizeof(SPELL_CATALOG)/sizeof(SPELL_CATALOG[0]);
+    for (int i = 0; i < SpellN; i++)
+    {
+        if (SPELL_CATALOG[i].type == type)
+            return SPELL_CATALOG[i];
+    }
+    return SPELL_CATALOG[0];
+}

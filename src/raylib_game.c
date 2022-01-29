@@ -22,7 +22,11 @@
 #endif
 
 // Total number of levels
-#define N_LEVELS 2
+#ifdef _DEBUG
+    #define N_LEVELS 1
+#else
+    #define N_LEVELS 2
+#endif
 
 //----------------------------------------------------------------------------------
 // Shared Variables Definition (global)
@@ -245,7 +249,11 @@ static void UpdateDrawFrame(void)
 
         currentMusic = nextMusic;
         PlayMusicStream(music[currentMusic]);
-        SetMusicVolume(music[currentMusic], 1.0f);
+        #ifdef _DEBUG
+            SetMusicVolume(music[currentMusic], 0.2f); // I am listening to Sabaton while coding this-
+        #else
+            SetMusicVolume(music[currentMusic], 1.0f);
+        #endif
     }
     UpdateMusicStream(music[currentMusic]);       // NOTE: Music keeps playing between screens
 

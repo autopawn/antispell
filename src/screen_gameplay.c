@@ -47,6 +47,8 @@ static int wandAbsorving;
 static Texture2D floorTexture;
 static Sound timeSpeedSfx[2];
 
+int coinsCollected = 0;
+
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -54,6 +56,10 @@ static Sound timeSpeedSfx[2];
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(int level)
 {
+    // Reset coins collected
+    if (level == 0 || level == 1)
+        coinsCollected = 0;
+
     char levelFilename[200];
     sprintf(levelFilename, "resources/levels/%02d.txt", level);
 
@@ -159,8 +165,18 @@ void UnloadGameplayScreen(void)
 int FinishGameplayScreen(void)
 {
     if (state->result == STATERESULT_NEXTLEVEL && state->resultTime > 30)
+    {
+        Entity *player = StateGetPlayer(state);
+        if (player)
+            coinsCollected += player->coins;
         return 2;
+    }
     if (state->result == STATERESULT_RETRY && state->resultTime > 30)
+    {
+        Entity *player = StateGetPlayer(state);
+        if (player)
+            coinsCollected += player->coins;
         return 1;
+    }
     return 0;
 }

@@ -15,6 +15,7 @@ typedef enum {
     SPELLTYPE_REFER,
     SPELLTYPE_RICE,
     SPELLTYPE_REEF,
+    SPELLTYPE_LAST = SPELLTYPE_REEF,
 } SpellType;
 
 typedef struct {
@@ -22,10 +23,13 @@ typedef struct {
     const char *name;
     Color color;
     Color color2;
+    int used; // Only for the inner catalog
 } Spell;
 
 Color GetPowerCharColor(char c);
 
 Spell GetSpell(const char *spell);
+
+Spell GetSpellFromType(SpellType type);
 
 #endif
