@@ -12,6 +12,7 @@
 
 typedef enum {
     TYPE_PLAYER,
+    TYPE_HINT,
     TYPE_FLOWER,
     TYPE_CHOMP,
     TYPE_MAGE,
@@ -126,7 +127,7 @@ State *StateCopy(const State *state);
 
 void StateFree(State *state);
 
-void StateUpdate(State *state, int process_pressed_keys);
+void StateUpdate(State *state, int processPressedKeys);
 
 Entity *StateGetPlayer(const State *state);
 

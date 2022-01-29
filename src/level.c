@@ -46,12 +46,29 @@ Level *LevelLoadFromFile(const char *fname){
         }
         else
         {
-            assert(x < MAX_LEVEL_CELLS_X);
-            assert(y < MAX_LEVEL_CELLS_Y);
-            level->cells[y + 1][x + 1] = c;
-            level->sizeY = y + 3;
-            if (x + 3 > level->sizeX) level->sizeX = x + 3;
-            x++;
+            if (x == 0 && '0' <= c && c <= '9')
+            {
+                i++;
+                while(text[i] != '\n' && text[i] != '\0' && text[i+1] != '\n' && text[i+1] != '\0')
+                {
+                    char symbol[2];
+                    symbol[0] = text[i+1];
+                    symbol[1] = '\0';
+                    assert(strlen(level->hints[c - '0']) < LEVEL_MAX_HINT_LENGTH);
+                    strcat(level->hints[c - '0'], symbol);
+                    i++;
+                }
+            }
+            else
+            {
+                assert(x < MAX_LEVEL_CELLS_X);
+                assert(y < MAX_LEVEL_CELLS_Y);
+                level->cells[y + 1][x + 1] = c;
+                level->sizeY = y + 3;
+                if (x + 3 > level->sizeX) level->sizeX = x + 3;
+                x++;
+            }
+
         }
     }
 
@@ -105,5 +122,12 @@ void LevelPrint(const Level *level){
     for (int y = 0; y < level->sizeY; y++)
     {
         printf("%s\n",level->cells[y]);
+    }
+    for (int h = 0; h < 10; h++)
+    {
+        if (strlen(level->hints[h]) > 0)
+        {
+            printf("hint %d : \"%s\"\n",h, level->hints[h]);
+        }
     }
 }

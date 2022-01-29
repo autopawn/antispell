@@ -107,10 +107,22 @@ State *StateLoadFromFile(const char *fname)
             if (cell=='L') StateAddEntity(state, TYPE_MAGE, 'L', body);
             if (cell=='O') StateAddEntity(state, TYPE_MAGE, 'O', body);
             if (cell=='S') StateAddEntity(state, TYPE_FLOWER, 'S', body);
+
+            if ('0' <= cell && cell <= '9') StateAddEntity(state, TYPE_HINT, cell, body);
         }
     }
 
     StateUnqueueNewEntities(state);
+
+    { // Swap the player to first position
+        Entity *player = StateGetPlayer(state);
+        if (player)
+        {
+            Entity tmp = state->ents[0];
+            state->ents[0] = *player;
+            *player = tmp;
+        }
+    }
 
     #ifdef SPELL
         strcpy(state->wand.text, SPELL);
@@ -234,7 +246,7 @@ static void UpdateParticleList(Particle *parts, int *partsN)
     *partsN = particlesN2;
 }
 
-static void StateUpdateEntity(State *state, Entity *ent, int colliding, int process_pressed_keys)
+static void StateUpdateEntity(State *state, Entity *ent, int colliding, int processPressedKeys)
 {
     // Emit powerChar particles
     if (ent->type == TYPE_SPELL)
@@ -256,7 +268,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 AddParticle(state->particles, &state->particlesN, MAX_STATE_PARTICLES, part);
             }
         }
-    } else {
+    } else if (ent->type != TYPE_HINT) {
         const float PARTICLE_SPD = 0.4;
         const int PARTICLE_FREQ = 16;
 
@@ -326,6 +338,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
         {
             ent->body.vx = 0;
             ent->body.vy = 0;
+            ent->attackCalled = 0;
             return;
         }
         if (ent->status == STATUS_CRAZY || (ent->status == STATUS_LOOSE && ent->timeAlive%150 == 0))
@@ -368,7 +381,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             ent->lookX = ent->body.x + lookDeltaX/2.0;
             ent->lookY = ent->body.y + lookDeltaY/2.0;
 
-            if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && state->wand.text[0] != '\0')
+            if (processPressedKeys && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && state->wand.text[0] != '\0')
             {
                 state->wand.text[strlen(state->wand.text) - 1] = '\0';
                 state->wand.spell = GetSpell(state->wand.text);
@@ -408,7 +421,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 }
             }
 
-            if (process_pressed_keys && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
                 ent->attackCalled = 1;
             if (IsKeyPressed(KEY_R))
                 ent->terminate = 1;
@@ -513,6 +526,23 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             {
                 ent->initialBody.x = ent->body.x;
                 ent->initialBody.y = ent->body.y;
+            }
+            break;
+        }
+
+        case TYPE_HINT:
+        {
+            ent->attackCalled = 0; // We will use this to show hint
+            if (ent->status != STATUS_CRAZY && ent->status != STATUS_LOOSE && ent->status != STATUS_ELECTRIFIED)
+            {
+                Entity *player = StateGetPlayer(state);
+                if (player)
+                {
+                    ent->lookX = player->body.x;
+                    ent->lookY = player->body.y;
+                    if (ent->status == STATUS_NORMAL && BodyDistance(ent->body, player->body) < TS*4)
+                        ent->attackCalled = 1;
+                }
             }
             break;
         }
@@ -781,7 +811,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                 for(int i = 0; i < state->entsN; i++)
                 {
                     Entity *other = &state->ents[i];
-                    if (other->type == TYPE_MAGE || other->type == TYPE_CHOMP)
+                    if (other->type == TYPE_MAGE || other->type == TYPE_CHOMP || other->type == TYPE_HINT)
                     {
                         if (other->status <= STATUS_ASTONISHED)
                         {
@@ -823,7 +853,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
 }
 
 
-void StateUpdate(State *state, int process_pressed_keys)
+void StateUpdate(State *state, int processPressedKeys)
 {
     // Destroy entities marked for termination
     int entsN2 = 0;
@@ -884,6 +914,7 @@ void StateUpdate(State *state, int process_pressed_keys)
             for (int i = 0; i < state->entsN; i++)
             {
                 Entity *ent = &state->ents[i];
+                if (ent->type == TYPE_HINT) continue;
                 if (ent->powerChar == 0 || ent->powerChar == '$')
                     continue;
                 if (state->wand.absorbingChar != 0 && state->wand.absorbingChar != ent->powerChar)
@@ -951,7 +982,7 @@ void StateUpdate(State *state, int process_pressed_keys)
         int colliding = UpdateBody((ent->type == TYPE_SPELL)? NULL : state->level,
                 &ent->body, slowFactor);
         // Update entity
-        StateUpdateEntity(state, ent, colliding, process_pressed_keys);
+        StateUpdateEntity(state, ent, colliding, processPressedKeys);
     }
 
     // Udpate state result

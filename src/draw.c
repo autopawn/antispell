@@ -16,6 +16,7 @@ static Texture2D mageTexture[2];
 static Texture2D bunnyTexture[2];
 static Texture2D flowerTexture[2];
 static Texture2D chompTexture[3];
+static Texture2D hintTexture[2];
 static Texture2D spellTexture;
 static Texture2D bubbleTexture[8];
 static Texture2D tileTexture[5];
@@ -33,6 +34,8 @@ void DrawLoadResources()
     chompTexture[0] = LoadTexture("resources/sprites/chomp0.png");
     chompTexture[1] = LoadTexture("resources/sprites/chomp1.png");
     chompTexture[2] = LoadTexture("resources/sprites/base.png");
+    hintTexture[0] = LoadTexture("resources/sprites/hint0.png");
+    hintTexture[1] = LoadTexture("resources/sprites/hint1.png");
     spellTexture = LoadTexture("resources/sprites/spell.png");
     bubbleTexture[0] = LoadTexture("resources/sprites/bubble_angry.png");
     bubbleTexture[1] = LoadTexture("resources/sprites/bubble_look.png");
@@ -62,6 +65,8 @@ void DrawUnloadResources()
     UnloadTexture(chompTexture[0]);
     UnloadTexture(chompTexture[1]);
     UnloadTexture(chompTexture[2]);
+    UnloadTexture(hintTexture[0]);
+    UnloadTexture(hintTexture[1]);
     UnloadTexture(spellTexture);
     UnloadTexture(bubbleTexture[0]);
     UnloadTexture(bubbleTexture[1]);
@@ -273,6 +278,7 @@ void DrawState(State *state, DrawLayer layer){
                 case TYPE_PLAYER:
                 case TYPE_MAGE:
                 case TYPE_FLOWER:
+                case TYPE_HINT:
                 {
                     float rotation = atan2((ent->lookY - ent->body.y), ent->lookX - ent->body.x);
                     rotation = (rotation/M_PI)*180;
@@ -289,6 +295,11 @@ void DrawState(State *state, DrawLayer layer){
                     {
                         texture[0] = mageTexture[0];
                         texture[1] = mageTexture[1];
+                    }
+                    if (ent->type == TYPE_HINT)
+                    {
+                        texture[0] = hintTexture[0];
+                        texture[1] = hintTexture[1];
                     }
 
                     Rectangle src = {0, 0, texture[0].width, texture[0].height};
@@ -352,11 +363,32 @@ void DrawState(State *state, DrawLayer layer){
         }
     }
 
+
     if (layer == LAYER2_ENTS)
         DrawStateParticles(state, 1);
 
     // Draw level
     DrawLevel(state->level, layer);
+
+    // Draw hints
+    if (layer == LAYER3_WALLS)
+    {
+        const int HINT_FONTSIZE = 20;
+
+        for (int i = 0; i < state->entsN; i++)
+        {
+            const Entity *ent = &state->ents[i];
+            if (ent->type == TYPE_HINT && ent->attackCalled)
+            {
+                if (ent->powerChar < '0' || ent->powerChar > '9') continue;
+                char *text = state->level->hints[ent->powerChar - '0'];
+
+                int textW = MeasureText(text, HINT_FONTSIZE);
+                DrawText(text, ent->body.x - textW/2, ent->body.y - 2*HINT_FONTSIZE, HINT_FONTSIZE,
+                        WHITE);
+            }
+        }
+    }
 }
 
 void DrawGUI(State *state)

@@ -5,10 +5,12 @@
 #define MAX_LEVEL_CELLS_X 300
 
 #define LEVEL_TILE_SIZE 50
+#define LEVEL_MAX_HINT_LENGTH 100
 
 typedef struct {
     int sizeY, sizeX;
     char cells[MAX_LEVEL_CELLS_Y+2][MAX_LEVEL_CELLS_X+3];
+    char hints[10][LEVEL_MAX_HINT_LENGTH];
 } Level;
 
 static inline int LevelCellIsSolid(char cell)

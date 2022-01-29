@@ -23,7 +23,7 @@ Keyboard:
 
 Mouse:
  - Move the mouse to look/aim.
- - Left click shoots the spell (if you formed a valid word).
+ - Hold left click shoots the spell (if you formed a valid word).
  - Right click deletes last letter.
 
 ### Screenshots
