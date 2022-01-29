@@ -272,7 +272,9 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
     }
     // Timers
     ent->timeAlive++;
-    ent->cooldown -= (ent->status != STATUS_ASTONISHED && ent->status != STATUS_LAUGH && ent->status != STATUS_COOL);
+
+    ent->cooldown -= (ent->status != STATUS_ASTONISHED && ent->status != STATUS_LAUGH
+            && ent->status != STATUS_COOL && ent->status != STATUS_SAD && ent->status != STATUS_MUTE);
     ent->cooldown -= (ent->status == STATUS_COOL)*(rand()%4==0);
     ent->cooldown -= 3*(ent->status == STATUS_ANGRY);
     ent->cooldown -= 2*(ent->status == STATUS_CEO);
@@ -281,6 +283,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
     { // Status particles
         if (ent->status == STATUS_ONFIRE)
             AddExplosion(ent, 1, RED, '^');
+        if (ent->status == STATUS_ELECTRIFIED)
+            AddExplosion(ent, 1, YELLOW, ';');
     }
 
     { // Status control
@@ -288,15 +292,24 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
         {
             if (ent->statusTime >= 100) ent->terminate = 1;
         }
-        else if (ent->status == STATUS_FROZEN || ent->status == STATUS_CEO)
+        else if (ent->status == STATUS_ELECTRIFIED)
         {
-            if (ent->statusTime >= 1000){
+            if (ent->statusTime >= 3000)
+            {
+                ent->status = STATUS_ASTONISHED;
+                ent->statusTime = 0;
+            }
+        }
+        else if (ent->status == STATUS_FROZEN || ent->status == STATUS_CEO || ent->status == STATUS_SAD)
+        {
+            if (ent->statusTime >= 1000)
+            {
                 ent->status = STATUS_NORMAL;
                 ent->statusTime = 0;
             }
         }
         else if (ent->status != STATUS_NORMAL && ent->status != STATUS_FREE
-            && ent->status != STATUS_LOOSE && ent->status != STATUS_COOL)
+            && ent->status != STATUS_LOOSE && ent->status != STATUS_COOL && ent->status != STATUS_MUTE)
         {
             if (ent->statusTime >= 600)
             {
@@ -319,7 +332,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
         }
     }
 
-    if (ent->status == STATUS_COOL)
+    if (ent->status == STATUS_COOL || ent->status == STATUS_ELECTRIFIED)
     {
         ent->body.x += rand()%3 - 1;
         ent->body.y += rand()%3 - 1;
@@ -425,7 +438,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                     (BodyDistance(ent->body, player->body) < ENEMY_VISION_RANGE || ent->status == STATUS_ANGRY) &&
                     LineOfSight(state->level, ent->body, player->body))
             {
-                if (ent->status != STATUS_CRAZY && ent->status != STATUS_LOOSE)
+                if (ent->status != STATUS_CRAZY && ent->status != STATUS_LOOSE && ent->status != STATUS_ELECTRIFIED)
                 {
                     ent->lookX = player->body.x;
                     ent->lookY = player->body.y;
@@ -468,7 +481,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
         {
             const Entity *player = StateGetPlayer(state);
             if (player && LineOfSight(state->level, ent->body, player->body)
-                    && ent->status != STATUS_CRAZY && ent->status != STATUS_LOOSE)
+                    && ent->status != STATUS_CRAZY && ent->status != STATUS_LOOSE && ent->status != STATUS_ELECTRIFIED)
             {
                 ent->lookX = player->body.x;
                 ent->lookY = player->body.y;
@@ -649,6 +662,56 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                             other->statusTime = 0;
                             break;
                         }
+                        case SPELLTYPE_EEL:
+                        {
+                            ent->terminate = 1;
+                            other->status = STATUS_ELECTRIFIED;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        case SPELLTYPE_LOSE:
+                        {
+                            ent->terminate = 1;
+                            other->status = STATUS_SAD;
+                            other->statusTime = 0;
+                            Entity *player = StateGetPlayer(state);
+                            if (player)
+                                player->coins += other->coins;
+                            AddStateExplosion(state, (other->coins + 99)/100, YELLOW, '$',
+                                other->body.x, other->body.y, other->body.rad);
+                            other->coins = 0;
+                            break;
+                        }
+                        case SPELLTYPE_CLOSE:
+                        {
+                            ent->terminate = 1;
+                            other->status = STATUS_MUTE;
+                            other->statusTime = 0;
+                            break;
+                        }
+                        case SPELLTYPE_SOLO:
+                        {
+                            ent->terminate = 1;
+                            for (int k = 0; k < state->entsN; k++)
+                            {
+                                Entity *ent2 = &state->ents[k];
+                                if (ent2 == other) continue;
+                                if (ent2->type == TYPE_PLAYER || ent2->type == TYPE_CHOMP || ent2->type == TYPE_MAGE)
+                                {
+                                    ent2->terminate = 1;
+                                    AddStateExplosion(state, 30, DARKGRAY, '?',
+                                        ent2->body.x, ent2->body.y, 1.3*ent2->body.rad);
+                                    int ent2CellX = ent2->body.x/TS;
+                                    int ent2CellY = ent2->body.y/TS;
+                                    char ent2Floor = LevelGetAt(state->level, ent2CellY, ent2CellX);
+                                    if (!LevelCellIsSolid(ent2Floor) && ent2Floor != '$')
+                                        state->level->cells[ent2CellY][ent2CellX] = 'o';
+                                }
+                            }
+                            other->status = STATUS_ASTONISHED;
+                            other->statusTime = 0;
+                            break;
+                        }
                         default:
                         {
                             break;
@@ -658,6 +721,8 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
             }
 
             if (ent->spell.type == SPELLTYPE_SEE && ent->timeAlive > 40)
+                ent->terminate = 1;
+            if (ent->spell.type == SPELLTYPE_SOLO && ent->timeAlive > 65)
                 ent->terminate = 1;
 
             if (LevelCellIsSolid(floor))

@@ -17,7 +17,7 @@ static Texture2D bunnyTexture[2];
 static Texture2D flowerTexture[2];
 static Texture2D chompTexture[3];
 static Texture2D spellTexture;
-static Texture2D bubbleTexture[6];
+static Texture2D bubbleTexture[8];
 static Texture2D tileTexture[5];
 
 void DrawLoadResources()
@@ -40,6 +40,8 @@ void DrawLoadResources()
     bubbleTexture[3] = LoadTexture("resources/sprites/bubble_laugh.png");
     bubbleTexture[4] = LoadTexture("resources/sprites/bubble_crazy.png");
     bubbleTexture[5] = LoadTexture("resources/sprites/bubble_cool.png");
+    bubbleTexture[6] = LoadTexture("resources/sprites/bubble_sad.png");
+    bubbleTexture[7] = LoadTexture("resources/sprites/bubble_mute.png");
     tileTexture[0] = LoadTexture("resources/tilesets/stairs_Delapouite.png");
     tileTexture[1] = LoadTexture("resources/tilesets/fire-zone_Lorc.png");
     tileTexture[2] = LoadTexture("resources/tilesets/wood-pile_Delapouite.png");
@@ -67,6 +69,8 @@ void DrawUnloadResources()
     UnloadTexture(bubbleTexture[3]);
     UnloadTexture(bubbleTexture[4]);
     UnloadTexture(bubbleTexture[5]);
+    UnloadTexture(bubbleTexture[6]);
+    UnloadTexture(bubbleTexture[7]);
     UnloadTexture(tileTexture[0]);
     UnloadTexture(tileTexture[1]);
     UnloadTexture(tileTexture[2]);
@@ -80,6 +84,7 @@ static Color GetStatusColor(EntityStatus status)
     if (status == STATUS_ONFIRE) return RED;
     if (status == STATUS_CEO)    return DARKGRAY;
     if (status == STATUS_COOL)   return SKYBLUE;
+    if (status == STATUS_ELECTRIFIED)   return YELLOW;
     return WHITE;
 }
 
@@ -337,6 +342,8 @@ void DrawState(State *state, DrawLayer layer){
             if (ent->status == STATUS_LAUGH)      textureId = 3;
             if (ent->status == STATUS_CRAZY)      textureId = 4;
             if (ent->status == STATUS_COOL)       textureId = 5;
+            if (ent->status == STATUS_SAD)        textureId = 6;
+            if (ent->status == STATUS_MUTE)       textureId = 7;
             if (textureId >= 0)
             {
                 DrawTexture(bubbleTexture[textureId], ent->body.x + ent->body.rad/2,

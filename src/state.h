@@ -23,7 +23,9 @@ typedef enum {
     STATUS_NORMAL,
     STATUS_YUMMY,
     STATUS_LAUGH,
+    STATUS_SAD,
     STATUS_CEO,
+    STATUS_MUTE,
     STATUS_ANGRY,
     STATUS_CRAZY,
     STATUS_COOL,
@@ -32,6 +34,7 @@ typedef enum {
     STATUS_ASTONISHED,
     STATUS_ONFIRE,
     STATUS_FROZEN,
+    STATUS_ELECTRIFIED,
 } EntityStatus;
 
 typedef struct {

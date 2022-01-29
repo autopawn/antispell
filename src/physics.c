@@ -176,6 +176,7 @@ static int cellStepXY(float *posX, float *posY, float tgtX, float tgtY)
 
 int LineOfSight(const Level *level, Body body1, Body body2)
 {
+    int fallback = 100;
     // Current position of the ray
     float rayX, rayY;
     rayX = body1.x;
@@ -190,6 +191,7 @@ int LineOfSight(const Level *level, Body body1, Body body2)
         // Check if there is an intersection with the current cell
         if (LevelCellIsSolid(level->cells[cellY][cellX]))
             return 0;
+        if (!(fallback--)) break; // Just in case
     }while(cellStepXY(&rayX, &rayY, body2.x, body2.y));
     // No object blocking
     return 1;
