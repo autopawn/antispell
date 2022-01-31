@@ -661,18 +661,28 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         case SPELLTYPE_CELL:
                         {
                             ent->terminate = 1;
-                            other->body.rad *= 0.8;
+                            other->body.rad *= 0.7;
                             float angle = 2*M_PI*rand()/(float)RAND_MAX;
                             Body body2 = other->body;
+                            Body initialBody2 = other->initialBody;
                             body2.x += 2*other->body.rad*cosf(angle);
                             body2.y += 2*other->body.rad*sinf(angle);
+                            initialBody2.x += 2*other->body.rad*cosf(angle);
+                            initialBody2.y += 2*other->body.rad*sinf(angle);
+
                             other->body.x -= 2*other->body.rad*cosf(angle);
                             other->body.y -= 2*other->body.rad*sinf(angle);
-                            other->initialBody = other->body;
+                            other->initialBody.x -= 2*other->body.rad*cosf(angle);
+                            other->initialBody.y -= 2*other->body.rad*sinf(angle);
                             if (other->body.rad < 3)
+                            {
                                 other->terminate = 1;
+                            }
                             else
-                                StateAddEntity(state, other->type, other->powerChar, body2);
+                            {
+                                Entity *clone = StateAddEntity(state, other->type, other->powerChar, body2);
+                                clone->initialBody = initialBody2;
+                            }
                             break;
                         }
                         case SPELLTYPE_FREE:
