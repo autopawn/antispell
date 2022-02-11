@@ -448,7 +448,7 @@ static void StateUpdateEntity(State *state, Entity *ent, int colliding, int proc
                         ent->coins += 100;
                         other->terminate = 1;
                     }
-                    else
+                    else if (other->status != STATUS_MUTE)
                     {
                         ent->terminate = 1;
                     }
